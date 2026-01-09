@@ -20,5 +20,16 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "WiseDubsApp"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+
 include(":app")
- 
+include(":NavigationApi")
+include(":NavigationImpl")
+include(":Login")
+include(":Sharing")
+
+project(":NavigationApi").projectDir = file("Core/Navigation/NavigationApi")
+project(":NavigationImpl").projectDir = file("Core/Navigation/NavigationImpl")
+project(":Login").projectDir = file("Feature/Auth/Login")
+project(":Sharing").projectDir = file("Feature/Sharing")
