@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)
 
+    implementation(libs.androidx.core.splash)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
