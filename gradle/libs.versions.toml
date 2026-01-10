@@ -13,7 +13,7 @@ material = "1.13.0"
 dagger = "2.57"
 kotlinxCollectionsImmutable = "0.3.8"
 datastorePreferences = "1.1.7"
-
+splashCore = "1.2.0"
 navigation3 = "1.0.0"
 runtime = "1.10.0"
 lifecycleViewmodelKtx = "2.10.0"
@@ -38,6 +38,8 @@ material = { group = "com.google.android.material", name = "material", version.r
 
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
 daggerCompiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
+
+androidx-core-splash = { module = "androidx.core:core-splashscreen", version.ref = "splashCore" }
 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 
