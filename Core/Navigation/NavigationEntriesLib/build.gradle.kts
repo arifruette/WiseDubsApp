@@ -1,13 +1,11 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlinKapt)
 }
 
 android {
-    namespace = "ru.ari.login"
+    namespace = "ru.ari.navigation"
     compileSdk {
         version = release(36)
     }
@@ -27,22 +25,16 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
     }
 }
 
 dependencies {
     api(projects.navigationApi)
-
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.kotlinx.serialization.json)
+    implementation(projects.login)
+    implementation(projects.sharing)
 
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)
-
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.kotlinx.serialization.json)
 }

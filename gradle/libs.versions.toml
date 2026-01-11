@@ -16,6 +16,7 @@ datastorePreferences = "1.1.7"
 splashCore = "1.2.0"
 navigation3 = "1.0.0"
 runtime = "1.10.0"
+javaxInject = "1"
 lifecycleViewmodelKtx = "2.10.0"
 
 [libraries]
@@ -45,6 +46,9 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+
+javaxInject = { module = "javax.inject:javax.inject", version.ref = "javaxInject" }
+
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.9.0" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
