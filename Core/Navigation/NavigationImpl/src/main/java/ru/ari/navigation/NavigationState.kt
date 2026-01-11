@@ -1,4 +1,4 @@
-package ru.ari.navigation.common
+package ru.ari.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState

@@ -1,7 +1,6 @@
 package ru.ari.wisedubsapp
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,7 +35,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val startRouteState by mainViewModel.uiState.collectAsStateWithLifecycle()
             isRouteAvailable = remember(startRouteState) {
-                Log.d("DEBUG", "onCreate: $startRouteState")
                 startRouteState is StartRouteState.Computed
             }
             when (startRouteState) {

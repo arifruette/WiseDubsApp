@@ -1,16 +1,18 @@
 package ru.ari.navigation.prelogin
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.collections.immutable.persistentListOf
 import ru.ari.login.navigation.provideLoginScreen
+import ru.ari.navigation.BaseNavigatorImpl
+import ru.ari.navigation.LocalPreLoginNavigator
 import ru.ari.navigation.Route
-import ru.ari.navigation.common.Navigator
-import ru.ari.navigation.common.rememberNavigationState
-import ru.ari.navigation.common.toEntries
+import ru.ari.navigation.rememberNavigationState
+import ru.ari.navigation.toEntries
 
 val PRE_LOGIN_ROUTES = persistentListOf(
     Route.PreLogin.LoginScreenRoute
@@ -25,14 +27,18 @@ fun PreLoginNavigation(
         topLevelRoutes = PRE_LOGIN_ROUTES
     )
     val preLoginNavigator = remember {
-        Navigator(preLoginNavigationState)
+        BaseNavigatorImpl(preLoginNavigationState)
     }
-    val entryProvider = entryProvider {
-        provideLoginScreen()
+    CompositionLocalProvider(
+        LocalPreLoginNavigator provides preLoginNavigator
+    ) {
+        val entryProvider = entryProvider {
+            provideLoginScreen()
+        }
+        NavDisplay(
+            entries = preLoginNavigationState.toEntries(entryProvider),
+            modifier = modifier,
+            onBack = preLoginNavigator::goBack
+        )
     }
-    NavDisplay(
-        entries = preLoginNavigationState.toEntries(entryProvider),
-        modifier = modifier,
-        onBack = preLoginNavigator::goBack
-    )
 }
