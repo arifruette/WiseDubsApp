@@ -31,14 +31,10 @@ android {
 }
 
 dependencies {
-    api(projects.login)
-
+    api(projects.navigationApi)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.kotlinx.collections.immutable)
 
     implementation(platform(libs.androidx.compose.bom))
-
-    implementation(projects.login)
-    implementation(projects.sharing)
 }

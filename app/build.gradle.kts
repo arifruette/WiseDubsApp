@@ -41,11 +41,16 @@ android {
 dependencies {
 
     implementation(projects.navigationImpl)
+    implementation(projects.navigationEntriesLib)
     implementation(projects.diCoreLib)
     implementation(projects.cacheLibImpl)
+    implementation(projects.login)
+    implementation(projects.sharing)
 
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)
+
+    implementation(libs.kotlinx.collections.immutable)
 
     implementation(libs.androidx.core.splash)
 

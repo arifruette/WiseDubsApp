@@ -7,7 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import ru.ari.navigation.di.RouteEntryProvider
 import ru.ari.navigation.postlogin.PostLoginNavigation
 import ru.ari.navigation.prelogin.PreLoginNavigation
 
@@ -19,6 +21,8 @@ val ROOT_ROUTES = persistentListOf(
 @Composable
 fun NavigationRoot(
     startRoute: Route,
+    preLoginRoutes: ImmutableList<RouteEntryProvider>,
+    postLoginRoutes: ImmutableList<RouteEntryProvider>,
     modifier: Modifier = Modifier
 ) {
     val rootNavigationState = rememberNavigationState(
@@ -33,10 +37,10 @@ fun NavigationRoot(
     ) {
         val rootEntryProvider = entryProvider<NavKey> {
             entry<Route.PreLogin> {
-                PreLoginNavigation()
+                PreLoginNavigation(preLoginRoutes)
             }
             entry<Route.PostLogin> {
-                PostLoginNavigation()
+                PostLoginNavigation(postLoginRoutes)
             }
         }
         NavDisplay(
