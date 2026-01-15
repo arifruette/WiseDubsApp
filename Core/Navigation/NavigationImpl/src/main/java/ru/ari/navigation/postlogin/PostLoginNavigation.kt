@@ -9,8 +9,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import ru.ari.composelib.LocalPostLoginNavigator
 import ru.ari.navigation.BaseNavigatorImpl
-import ru.ari.navigation.LocalPostLoginNavigator
 import ru.ari.navigation.Route
 import ru.ari.navigation.di.RouteEntryProvider
 import ru.ari.navigation.rememberNavigationState

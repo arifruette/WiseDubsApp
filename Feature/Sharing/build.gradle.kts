@@ -35,6 +35,8 @@ android {
 dependencies {
     api(projects.navigationApi)
 
+    implementation(projects.composeCoreLib)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
 

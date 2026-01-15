@@ -1,11 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "ru.ari.navigation"
+    namespace = "ru.ari.composelib"
     compileSdk {
         version = release(36)
     }
@@ -32,12 +31,6 @@ android {
 
 dependencies {
     api(projects.navigationApi)
-
-    implementation(projects.composeCoreLib)
-
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.kotlinx.collections.immutable)
-
-    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
 }

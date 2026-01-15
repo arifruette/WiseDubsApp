@@ -20,7 +20,7 @@ import javax.inject.Singleton
     dependencies = [DataStoreDeps::class]
 )
 interface AppComponent {
-    val mainViewModelFactory: ViewModelProvider.Factory
+    val compositeViewModelProvider: ViewModelProvider.Factory
 
     @get:PreLoginRoutes
     val preLoginRoutes: Set<RouteEntryProvider>

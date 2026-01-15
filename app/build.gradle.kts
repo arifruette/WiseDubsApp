@@ -44,6 +44,7 @@ dependencies {
     implementation(projects.navigationEntriesLib)
     implementation(projects.diCoreLib)
     implementation(projects.cacheLibImpl)
+    implementation(projects.composeCoreLib)
     implementation(projects.login)
     implementation(projects.sharing)
 

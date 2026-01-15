@@ -32,6 +32,7 @@ include(":DICoreLib")
 include(":CacheLibApi")
 include(":CacheLibImpl")
 include(":NavigationEntriesLib")
+include(":ComposeCoreLib")
 
 project(":NavigationApi").projectDir = file("Core/Navigation/NavigationApi")
 project(":NavigationImpl").projectDir = file("Core/Navigation/NavigationImpl")
@@ -41,3 +42,5 @@ project(":Sharing").projectDir = file("Feature/Sharing")
 project(":DICoreLib").projectDir = file("Core/DI/DICoreLib")
 project(":CacheLibApi").projectDir = file("Core/Cache/CacheLibApi")
 project(":CacheLibImpl").projectDir = file("Core/Cache/CacheLibImpl")
+project(":ComposeCoreLib").projectDir = file("Core/ComposeCoreLib")
+

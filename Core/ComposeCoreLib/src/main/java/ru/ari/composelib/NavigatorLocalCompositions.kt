@@ -1,6 +1,7 @@
-package ru.ari.navigation
+package ru.ari.composelib
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import ru.ari.navigation.Navigator
 
 val LocalRootNavigator = staticCompositionLocalOf<Navigator> {
     error("Root navigator wasn't provided")
