@@ -7,7 +7,7 @@ import ru.ari.cache.datastore.MockDataStoreHelperImpl
 import javax.inject.Singleton
 
 @Module
-interface DataStoreHelperModule {
+interface CacheLibModule {
 
     @Binds
     @Singleton

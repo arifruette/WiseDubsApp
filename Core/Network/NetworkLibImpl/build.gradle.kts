@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "ru.ari.di"
+    namespace = "ru.ari.network"
     compileSdk {
         version = release(36)
     }
@@ -31,8 +31,13 @@ android {
 }
 
 dependencies {
+    api(projects.networkLibApi)
+    implementation(projects.cacheLibApi)
+
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)
 
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.androidx.core.ktx)
 }

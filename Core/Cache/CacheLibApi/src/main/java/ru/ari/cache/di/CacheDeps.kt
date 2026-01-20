@@ -2,6 +2,6 @@ package ru.ari.cache.di
 
 import ru.ari.cache.datastore.DataStoreHelper
 
-interface DataStoreDeps {
+interface CacheDeps {
     val dataStoreHelper: DataStoreHelper
 }
