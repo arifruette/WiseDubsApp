@@ -17,7 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toImmutableList
 import ru.ari.composelib.LocalViewModelProvider
 import ru.ari.navigation.NavigationRoot
-import ru.ari.wisedubsapp.ui.theme.WiseDubsAppTheme
+import ru.ari.designsystem.theme.WiseDubsAppTheme
 
 class MainActivity : ComponentActivity() {
 

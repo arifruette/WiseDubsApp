@@ -53,6 +53,7 @@ dependencies {
     implementation(projects.composeCoreLib)
     implementation(projects.login)
     implementation(projects.sharing)
+    implementation(projects.designSystemCoreLib)
 
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)
