@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import dagger.Module
 import dagger.Provides
+import dagger.multibindings.Multibinds
 import javax.inject.Provider
 import javax.inject.Singleton
 

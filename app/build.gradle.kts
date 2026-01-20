@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlinKapt)
 }
 
+val baseApiUrl = (findProperty("baseApiUrl") ?: System.getenv("BASE_API_URL") ?: "NO_FOUND")
+
 android {
     namespace = "ru.ari.wisedubsapp"
     compileSdk {
@@ -19,6 +21,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BASE_API_URL", "\"$baseApiUrl\"")
     }
 
     buildTypes {
@@ -35,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -44,6 +49,7 @@ dependencies {
     implementation(projects.navigationEntriesLib)
     implementation(projects.diCoreLib)
     implementation(projects.cacheLibImpl)
+    implementation(projects.networkLibImpl)
     implementation(projects.composeCoreLib)
     implementation(projects.login)
     implementation(projects.sharing)

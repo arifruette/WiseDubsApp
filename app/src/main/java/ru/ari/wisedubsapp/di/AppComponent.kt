@@ -2,7 +2,8 @@ package ru.ari.wisedubsapp.di
 
 import androidx.lifecycle.ViewModelProvider
 import dagger.Component
-import ru.ari.cache.di.DataStoreDeps
+import ru.ari.cache.di.CacheDeps
+import ru.ari.di.viewmodel.CoreBindsModule
 import ru.ari.di.viewmodel.CoreModule
 import ru.ari.navigation.NavigationEntriesModule
 import ru.ari.navigation.di.PostLoginRoutes
@@ -16,8 +17,9 @@ import javax.inject.Singleton
         AppModule::class,
         CoreModule::class,
         NavigationEntriesModule::class,
+        CoreBindsModule::class
     ],
-    dependencies = [DataStoreDeps::class]
+    dependencies = [CacheDeps::class]
 )
 interface AppComponent {
     val compositeViewModelProvider: ViewModelProvider.Factory
@@ -31,7 +33,7 @@ interface AppComponent {
     @Component.Factory
     interface Factory {
         fun create(
-            dataStoreDeps: DataStoreDeps
+            cacheDeps: CacheDeps
         ): AppComponent
     }
 }

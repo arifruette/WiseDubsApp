@@ -1,11 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlinKapt)
 }
 
 android {
-    namespace = "ru.ari.di"
+    namespace = "ru.ari.network"
     compileSdk {
         version = release(36)
     }
@@ -31,8 +30,8 @@ android {
 }
 
 dependencies {
-    implementation(libs.dagger)
-    kapt(libs.daggerCompiler)
+    implementation(libs.javaxInject)
 
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 }
