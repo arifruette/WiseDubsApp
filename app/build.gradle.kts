@@ -46,13 +46,13 @@ android {
 dependencies {
 
     implementation(projects.navigationImpl)
-    implementation(projects.navigationEntriesLib)
     implementation(projects.diCoreLib)
     implementation(projects.cacheLibImpl)
     implementation(projects.networkLibImpl)
     implementation(projects.composeCoreLib)
     implementation(projects.login)
     implementation(projects.sharing)
+    implementation(projects.designSystemCoreLib)
 
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)
