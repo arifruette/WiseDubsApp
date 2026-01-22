@@ -2,7 +2,7 @@ package ru.ari.cache.datastore.di
 
 import dagger.Binds
 import dagger.Module
-import ru.ari.cache.datastore.DataStoreHelper
+import ru.ari.cache.domain.datastore.DataStoreHelper
 import ru.ari.cache.datastore.MockDataStoreHelperImpl
 import javax.inject.Singleton
 

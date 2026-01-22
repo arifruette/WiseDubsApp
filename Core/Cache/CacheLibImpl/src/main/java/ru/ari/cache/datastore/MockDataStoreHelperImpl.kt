@@ -2,12 +2,14 @@ package ru.ari.cache.datastore
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import ru.ari.cache.domain.datastore.DataStoreHelper
+import ru.ari.cache.domain.models.SessionState
 import javax.inject.Inject
 
 class MockDataStoreHelperImpl @Inject constructor(): DataStoreHelper {
-    override suspend fun saveToken(token: String) = Unit
+    override suspend fun saveSessionState(sessionState: SessionState) = Unit
 
-    override suspend fun getToken(): Flow<String?> = flowOf(null)
+    override suspend fun getSessionState(): Flow<SessionState?> = flowOf(null)
 
-    override suspend fun eraseToken() = Unit
+    override suspend fun eraseSessionState() = Unit
 }

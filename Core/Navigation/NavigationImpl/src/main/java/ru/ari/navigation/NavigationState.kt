@@ -9,8 +9,10 @@ import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -67,8 +69,13 @@ fun NavigationState.toEntries(
     entryProvider: (NavKey) -> NavEntry<NavKey>
 ): SnapshotStateList<NavEntry<NavKey>> {
     val decoratedEntries = backStacks.mapValues { (_, stack) ->
-        val decorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator<NavKey>()
+        val decorators = listOf<NavEntryDecorator<NavKey>>(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            // эта вещь позволяет привязывать вью модели к жц каждого entry
+            // благодаря предоставлению LocalViewModelStoreOwner для каждого из них
+            // поэтому можно просто вызвать функцию viewModel с фабрикой и
+            // получить готовенькую viewModel с нужным жц
+            rememberViewModelStoreNavEntryDecorator()
         )
         rememberDecoratedNavEntries(
             backStack = stack,

@@ -2,13 +2,13 @@ package ru.ari.wisedubsapp
 
 import android.app.Application
 import ru.ari.cache.datastore.di.DaggerCacheLibComponent
-import ru.ari.cache.di.CacheDeps
+import ru.ari.cache.di.CacheApi
 import ru.ari.di.DepsProvider
 import ru.ari.network.di.DaggerNetworkComponent
-import ru.ari.network.di.NetworkDeps
-import ru.ari.wisedubsapp.di.AppComponent
-import ru.ari.wisedubsapp.di.DaggerAppComponent
-import ru.ari.wisedubsapp.di.DepsStore
+import ru.ari.network.di.NetworkApi
+import ru.ari.wisedubsapp.di.component.AppComponent
+import ru.ari.wisedubsapp.di.component.DaggerAppComponent
+import ru.ari.wisedubsapp.di.utils.DepsStore
 
 class WiseDubsApplication : Application(), DepsProvider {
 
@@ -16,20 +16,20 @@ class WiseDubsApplication : Application(), DepsProvider {
         private set
 
     val depsStore = DepsStore().apply {
-        register(CacheDeps::class.java) {
+        register(CacheApi::class.java) {
             DaggerCacheLibComponent.create()
         }
-        register(NetworkDeps::class.java) {
+        register(NetworkApi::class.java) {
             DaggerNetworkComponent.factory().create(
                 baseUrl = BuildConfig.BASE_API_URL,
-                cacheDeps = getDeps(CacheDeps::class.java)
+                cacheApi = getDeps(CacheApi::class.java)
             )
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        appComponent = DaggerAppComponent.factory().create(getDeps(CacheDeps::class.java))
+        appComponent = DaggerAppComponent.factory().create(getDeps(CacheApi::class.java))
     }
 
     override fun <T : Any> getDeps(key: Class<T>): T = depsStore.getDeps(key)

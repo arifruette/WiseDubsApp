@@ -8,16 +8,16 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toImmutableList
-import ru.ari.composelib.LocalViewModelProvider
-import ru.ari.navigation.NavigationRoot
 import ru.ari.designsystem.theme.WiseDubsAppTheme
+import ru.ari.navigation.NavigationRoot
+import ru.ari.wisedubsapp.presentation.viewmodel.MainViewModel
+import ru.ari.wisedubsapp.presentation.viewmodel.contract.StartRouteState
 
 class MainActivity : ComponentActivity() {
 
@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
         val mainViewModel: MainViewModel by viewModels {
-            appComponent.compositeViewModelProvider
+            appComponent.mainViewModelFactory
         }
         splash.setKeepOnScreenCondition {
             !isRouteAvailable
@@ -48,17 +48,15 @@ class MainActivity : ComponentActivity() {
                 is StartRouteState.Loading -> Unit
                 is StartRouteState.Computed -> {
                     WiseDubsAppTheme {
-                        CompositionLocalProvider(LocalViewModelProvider provides appComponent.compositeViewModelProvider) {
-                            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                                NavigationRoot(
-                                    startRoute = (startRouteState as StartRouteState.Computed).route,
-                                    preLoginRoutes = preLoginRoutes,
-                                    postLoginRoutes = postLoginRoutes,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(innerPadding)
-                                )
-                            }
+                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            NavigationRoot(
+                                startRoute = (startRouteState as StartRouteState.Computed).route,
+                                preLoginRoutes = preLoginRoutes,
+                                postLoginRoutes = postLoginRoutes,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            )
                         }
                     }
                 }
