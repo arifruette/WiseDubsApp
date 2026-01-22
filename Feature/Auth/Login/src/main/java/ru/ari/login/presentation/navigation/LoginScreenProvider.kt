@@ -21,7 +21,7 @@ import ru.ari.navigation.Route
 import ru.ari.navigation.di.RouteEntryProvider
 import javax.inject.Inject
 
-class LoginScreenProvider @Inject constructor(): RouteEntryProvider {
+class LoginScreenProvider @Inject constructor() : RouteEntryProvider {
     override fun EntryProviderScope<NavKey>.provideRoute() {
         entry<Route.PreLogin.LoginScreenRoute> {
             val viewModelStoreOwner = LocalViewModelStoreOwner.current
@@ -55,6 +55,10 @@ private fun LoginScreenNavigationRoute(
                     effect.message,
                     Toast.LENGTH_SHORT
                 ).show()
+
+                is LoginScreenUiEffect.NavigateToMainScreen -> {
+                    rootNavigator.navigate(Route.PostLogin)
+                }
             }
         }
     }
@@ -64,9 +68,6 @@ private fun LoginScreenNavigationRoute(
     LoginScreen(
         uiState = uiState,
         onAction = loginViewModel::onAction,
-        navigateToMainScreen = {
-            rootNavigator.navigate(Route.PostLogin)
-        },
         navigateToRegistrationScreen = {
             // TODO: поменять когда добавится экран реги
             rootNavigator.navigate(Route.PreLogin)

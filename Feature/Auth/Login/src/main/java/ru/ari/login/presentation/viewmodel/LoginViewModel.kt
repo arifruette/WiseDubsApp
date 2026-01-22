@@ -32,7 +32,7 @@ class LoginViewModel @Inject constructor(
 
     fun onAction(action: LoginScreenAction) {
         when (action) {
-            is LoginScreenAction.LoginUser -> loginUser(action.onSuccess)
+            is LoginScreenAction.LoginUser -> loginUser()
 
             is LoginScreenAction.ChangeEmailState -> changeLoginState(action.email)
 
@@ -42,7 +42,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun loginUser(onSuccess: () -> Unit) {
+    private fun loginUser() {
         _uiState.update {
             _uiState.value.copy(isLoading = true)
         }
@@ -50,8 +50,8 @@ class LoginViewModel @Inject constructor(
             val result =
                 loginUserUseCase(UserLogin(uiState.value.emailText, uiState.value.passwordText))
             result.onSuccess {
+                _uiEffect.emit(LoginScreenUiEffect.NavigateToMainScreen )
                 _uiState.update { it.copy(isLoading = false) }
-                onSuccess()
             }.onError { code, message ->
                 _uiEffect.emit(LoginScreenUiEffect.ShowError(message))
                 _uiState.update { it.copy(isLoading = false) }

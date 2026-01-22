@@ -39,7 +39,6 @@ import ru.ari.login.presentation.viewmodel.contract.LoginScreenUiState
 fun LoginScreen(
     uiState: LoginScreenUiState,
     onAction: (LoginScreenAction) -> Unit,
-    navigateToMainScreen: () -> Unit,
     navigateToRegistrationScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -91,9 +90,7 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             keyBoardController?.hide()
-                            onAction(
-                                LoginScreenAction.LoginUser(navigateToMainScreen)
-                            )
+                            onAction(LoginScreenAction.LoginUser)
                         },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -145,7 +142,6 @@ private fun LoginScreenPreview() {
             LoginScreen(
                 uiState = LoginScreenUiState(),
                 onAction = {},
-                navigateToMainScreen = {},
                 navigateToRegistrationScreen = {},
                 modifier = Modifier
                     .fillMaxSize()
