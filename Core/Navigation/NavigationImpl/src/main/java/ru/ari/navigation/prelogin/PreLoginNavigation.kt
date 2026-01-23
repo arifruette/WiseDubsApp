@@ -29,7 +29,7 @@ fun PreLoginNavigation(
         startRoute = Route.PreLogin.LoginScreenRoute,
         topLevelRoutes = PRE_LOGIN_ROUTES
     )
-    val preLoginNavigator = remember {
+    val preLoginNavigator = remember(preLoginNavigationState) {
         BaseNavigatorImpl(preLoginNavigationState)
     }
     CompositionLocalProvider(
