@@ -35,6 +35,7 @@ include(":ComposeCoreLib")
 include(":NetworkLibApi")
 include(":NetworkLibImpl")
 include(":DesignSystemCoreLib")
+include(":Registration")
 
 project(":NavigationApi").projectDir = file("Core/Navigation/NavigationApi")
 project(":NavigationImpl").projectDir = file("Core/Navigation/NavigationImpl")
@@ -47,4 +48,5 @@ project(":ComposeCoreLib").projectDir = file("Core/ComposeCoreLib")
 project(":NetworkLibApi").projectDir = file("Core/Network/NetworkLibApi")
 project(":NetworkLibImpl").projectDir = file("Core/Network/NetworkLibImpl")
 project(":DesignSystemCoreLib").projectDir = file("Core/DesignSystemCoreLib")
+project(":Registration").projectDir = file("Feature/Auth/Registration")
 

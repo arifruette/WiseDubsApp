@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "ru.ari.login"
+    namespace = "ru.ari.registration"
     compileSdk {
         version = release(36)
     }
@@ -26,35 +26,23 @@ android {
             )
         }
     }
-    buildFeatures {
-        compose = true
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
-composeCompiler {
-    reportsDestination.set(layout.buildDirectory.dir("compose_compiler"))
-    metricsDestination.set(layout.buildDirectory.dir("compose_compiler"))
-}
-
 dependencies {
     implementation(projects.navigationApi)
     implementation(projects.networkLibApi)
-    implementation(projects.cacheLibApi)
     implementation(projects.diCoreLib)
 
-    implementation(projects.composeCoreLib)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.constraint.layout)
     implementation(projects.designSystemCoreLib)
-
-    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)
