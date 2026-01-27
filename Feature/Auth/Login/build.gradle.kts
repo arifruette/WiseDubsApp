@@ -45,6 +45,7 @@ dependencies {
     implementation(projects.networkLibApi)
     implementation(projects.cacheLibApi)
     implementation(projects.diCoreLib)
+    implementation(projects.authCommonLibApi)
 
     implementation(projects.composeCoreLib)
 

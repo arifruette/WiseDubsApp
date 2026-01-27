@@ -53,6 +53,7 @@ dependencies {
     implementation(projects.login)
     implementation(projects.sharing)
     implementation(projects.designSystemCoreLib)
+    implementation(projects.authCommonLibImpl)
 
     implementation(libs.dagger)
     kapt(libs.daggerCompiler)

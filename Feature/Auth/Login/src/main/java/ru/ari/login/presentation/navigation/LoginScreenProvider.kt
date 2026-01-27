@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -26,9 +27,9 @@ class LoginScreenProvider @Inject constructor() : RouteEntryProvider {
         entry<Route.PreLogin.LoginScreenRoute> {
             val viewModelStoreOwner = LocalViewModelStoreOwner.current
             val context = LocalContext.current
-            val component = remember(viewModelStoreOwner) {
+            val component = rememberSaveable(viewModelStoreOwner) {
                 context.run {
-                    DaggerLoginComponent.factory().create(deps(), deps())
+                    DaggerLoginComponent.factory().create(deps())
                 }
             }
             val loginViewModel = daggerViewModel<LoginViewModel> {
