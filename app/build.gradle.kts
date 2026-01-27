@@ -51,6 +51,7 @@ dependencies {
     implementation(projects.networkLibImpl)
     implementation(projects.composeCoreLib)
     implementation(projects.login)
+    implementation(projects.registration)
     implementation(projects.sharing)
     implementation(projects.designSystemCoreLib)
     implementation(projects.authCommonLibImpl)

@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ari.auth.common.api.domain.interactor.AuthInteractor
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenAction
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenUiEffect
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenUiState
+import ru.ari.login.presentation.contract.LoginScreenAction
+import ru.ari.login.presentation.contract.LoginScreenUiEffect
+import ru.ari.login.presentation.contract.LoginScreenUiState
 import ru.ari.network.domain.models.onError
 import ru.ari.network.domain.models.onException
 import ru.ari.network.domain.models.onSuccess

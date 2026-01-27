@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="registration_title">Регистрация</string>
+    <string name="email_placeholder">Почта</string>
+    <string name="first_password_field_placeholder">Введите пароль</string>
+    <string name="second_password_field_placeholder">Повторите пароль</string>
+    <string name="registration_button_text">Зарегестрироваться</string>
+    <string name="hse_logo">Логотип ВШЭ</string>
+    <string name="telegram_text_field_placeholder">Телеграм</string>
+    <string name="to_login_screen_button_text">Вход</string>
+</resources>

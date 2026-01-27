@@ -11,6 +11,9 @@ sealed interface Route : NavKey {
 
         @Serializable
         data object LoginScreenRoute : Route
+
+        @Serializable
+        data object RegistrationScreenRoute : Route
     }
 
     @Serializable

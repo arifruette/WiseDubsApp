@@ -1,4 +1,4 @@
-package ru.ari.login.presentation.viewmodel.contract
+package ru.ari.login.presentation.contract
 
 import androidx.compose.runtime.Immutable
 

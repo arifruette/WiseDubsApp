@@ -1,4 +1,4 @@
-package ru.ari.login.presentation.navigation
+package ru.ari.registration.presentation.navigation
 
 import android.widget.Toast
 import androidx.compose.runtime.Composable
@@ -15,65 +15,68 @@ import ru.ari.composelib.LocalPreLoginNavigator
 import ru.ari.composelib.LocalRootNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.di.deps
-import ru.ari.login.di.component.DaggerLoginComponent
-import ru.ari.login.presentation.ui.LoginScreen
-import ru.ari.login.presentation.viewmodel.LoginViewModel
-import ru.ari.login.presentation.contract.LoginScreenUiEffect
 import ru.ari.navigation.Route
 import ru.ari.navigation.di.RouteEntryProvider
+import ru.ari.registration.di.component.DaggerRegistrationComponent
+import ru.ari.registration.presentation.contract.RegistrationScreenUiEffect
+import ru.ari.registration.presentation.ui.RegistrationScreen
+import ru.ari.registration.presentation.viewmodel.RegistrationViewModel
 import javax.inject.Inject
 
-class LoginScreenProvider @Inject constructor() : RouteEntryProvider {
+class RegistrationScreenProvider @Inject constructor(): RouteEntryProvider {
     override fun EntryProviderScope<NavKey>.provideRoute() {
-        entry<Route.PreLogin.LoginScreenRoute> {
+        entry<Route.PreLogin.RegistrationScreenRoute> {
             val viewModelStoreOwner = LocalViewModelStoreOwner.current
             val context = LocalContext.current
             // todo: думаю для компонента следуюет создавать viewmodel в качестве холдера
             val component = remember(viewModelStoreOwner) {
                 context.run {
-                    DaggerLoginComponent.factory().create(deps())
+                    DaggerRegistrationComponent.factory().create(deps())
                 }
             }
-            val loginViewModel = daggerViewModel<LoginViewModel> {
-                component.loginViewModelFactory
-            }
-            LoginScreenNavigationRoute(loginViewModel)
+            val registrationViewModel = daggerViewModel<RegistrationViewModel>(
+                viewModelFactoryCreator = {
+                    component.registrationViewModelFactory
+                }
+            )
+            RegistrationScreenRoute(registrationViewModel)
         }
     }
 }
 
 @Composable
-private fun LoginScreenNavigationRoute(
-    loginViewModel: LoginViewModel
+private fun RegistrationScreenRoute(
+    viewModel: RegistrationViewModel
 ) {
+    val uiEffect = viewModel.uiEffect
+    val context = LocalContext.current
+
     val rootNavigator = LocalRootNavigator.current
     val authNavigator = LocalPreLoginNavigator.current
 
-    val context = LocalContext.current
-
     LaunchedEffect(Unit) {
-        loginViewModel.uiEffect.collect { effect ->
+        uiEffect.collect { effect ->
             when (effect) {
-                is LoginScreenUiEffect.ShowError -> Toast.makeText(
+                is RegistrationScreenUiEffect.ShowError -> Toast.makeText(
                     context,
                     effect.message,
                     Toast.LENGTH_SHORT
                 ).show()
 
-                is LoginScreenUiEffect.NavigateToMainScreen -> {
+                is RegistrationScreenUiEffect.NavigateToMainScreen -> {
                     rootNavigator.navigate(Route.PostLogin)
                 }
             }
         }
     }
 
-    val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LoginScreen(
+    RegistrationScreen(
         uiState = uiState,
-        onAction = loginViewModel::onAction,
-        navigateToRegistrationScreen = {
-            authNavigator.navigate(Route.PreLogin.RegistrationScreenRoute)
+        onAction = viewModel::onAction,
+        navigateToLoginScreen = {
+            authNavigator.navigate(Route.PreLogin.LoginScreenRoute)
         }
     )
 }

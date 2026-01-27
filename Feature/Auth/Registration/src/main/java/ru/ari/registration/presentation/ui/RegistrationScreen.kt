@@ -1,4 +1,4 @@
-package ru.ari.login.presentation.ui
+package ru.ari.registration.presentation.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
@@ -31,21 +31,23 @@ import ru.ari.designsystem.components.WiseDubsProgressIndicator
 import ru.ari.designsystem.components.WiseDubsSecureTextField
 import ru.ari.designsystem.components.WiseDubsTextField
 import ru.ari.designsystem.theme.WiseDubsAppTheme
-import ru.ari.login.R
-import ru.ari.login.presentation.contract.LoginScreenAction
-import ru.ari.login.presentation.contract.LoginScreenUiState
+import ru.ari.registration.R
+import ru.ari.registration.presentation.contract.RegistrationScreenAction
+import ru.ari.registration.presentation.models.PasswordField
+import ru.ari.registration.presentation.contract.RegistrationScreenUiState
 
 @Composable
-fun LoginScreen(
-    uiState: LoginScreenUiState,
-    onAction: (LoginScreenAction) -> Unit,
-    navigateToRegistrationScreen: () -> Unit,
+fun RegistrationScreen(
+    uiState: RegistrationScreenUiState,
+    onAction: (RegistrationScreenAction) -> Unit,
+    navigateToLoginScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val keyBoardController = LocalSoftwareKeyboardController.current
 
     when {
         uiState.isLoading -> WiseDubsProgressIndicator()
+
         else -> {
             ConstraintLayout(
                 modifier = modifier
@@ -67,36 +69,84 @@ fun LoginScreen(
                         .imePadding()
                 ) {
                     Text(
-                        text = stringResource(id = R.string.auth_title),
+                        text = stringResource(R.string.registration_title),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight(700))
                     )
                     Spacer(modifier = Modifier.height(54.dp))
                     WiseDubsTextField(
                         value = uiState.emailText,
-                        onValueChanged = { onAction(LoginScreenAction.ChangeEmailState(it)) },
+                        onValueChanged = { onAction(RegistrationScreenAction.ChangeEmailState(it)) },
                         labelText = stringResource(R.string.email_placeholder),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(20.dp))
+                    WiseDubsTextField(
+                        value = uiState.telegramIdText,
+                        onValueChanged = {
+                            onAction(
+                                RegistrationScreenAction.ChangeTelegramIdState(
+                                    it
+                                )
+                            )
+                        },
+                        labelText = stringResource(R.string.telegram_text_field_placeholder),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
                     WiseDubsSecureTextField(
-                        value = uiState.passwordText,
-                        onValueChanged = { onAction(LoginScreenAction.ChangePasswordState(it)) },
-                        labelText = stringResource(R.string.password_placeholder),
-                        isValueVisible = uiState.isPasswordTextVisible,
-                        onValueVisibilityChanged = { onAction(LoginScreenAction.ChangePasswordVisibility) },
+                        value = uiState.firstPasswordText,
+                        onValueChanged = {
+                            onAction(
+                                RegistrationScreenAction.ChangePasswordState(
+                                    password = it,
+                                    passwordField = PasswordField.FIRST
+                                )
+                            )
+                        },
+                        labelText = stringResource(R.string.first_password_field_placeholder),
+                        isValueVisible = uiState.isFirstPasswordVisible,
+                        onValueVisibilityChanged = {
+                            onAction(
+                                RegistrationScreenAction.ChangePasswordVisibility(PasswordField.FIRST)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    WiseDubsSecureTextField(
+                        value = uiState.secondPasswordText,
+                        onValueChanged = {
+                            onAction(
+                                RegistrationScreenAction.ChangePasswordState(
+                                    password = it,
+                                    passwordField = PasswordField.SECOND
+                                )
+                            )
+                        },
+                        labelText = stringResource(R.string.second_password_field_placeholder),
+                        isValueVisible = uiState.isSecondPasswordVisible,
+                        onValueVisibilityChanged = {
+                            onAction(
+                                RegistrationScreenAction.ChangePasswordVisibility(
+                                    PasswordField.SECOND
+                                )
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
                         onClick = {
                             keyBoardController?.hide()
-                            onAction(LoginScreenAction.LoginUser)
+                            onAction(
+                                RegistrationScreenAction.RegisterUser
+                            )
                         },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = stringResource(R.string.enter_button_text),
+                            text = stringResource(R.string.registration_button_text),
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
@@ -104,16 +154,17 @@ fun LoginScreen(
                 OutlinedButton(
                     onClick = {
                         keyBoardController?.hide()
-                        navigateToRegistrationScreen()
+                        navigateToLoginScreen()
                     },
                     shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .constrainAs(navigateButton) {
                             bottom.linkTo(parent.bottom, margin = 32.dp)
                         }
                 ) {
                     Text(
-                        text = stringResource(R.string.to_registration_screen_button_text),
+                        text = stringResource(R.string.to_login_screen_button_text),
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
@@ -133,16 +184,16 @@ fun LoginScreen(
     }
 }
 
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, showSystemUi = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO, showSystemUi = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun LoginScreenPreview() {
+private fun RegistrationScreenPreview() {
     WiseDubsAppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            LoginScreen(
-                uiState = LoginScreenUiState(),
+            RegistrationScreen(
+                uiState = RegistrationScreenUiState(),
                 onAction = {},
-                navigateToRegistrationScreen = {},
+                navigateToLoginScreen = {},
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)

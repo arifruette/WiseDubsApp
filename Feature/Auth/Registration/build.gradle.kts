@@ -36,6 +36,7 @@ dependencies {
     implementation(projects.navigationApi)
     implementation(projects.networkLibApi)
     implementation(projects.diCoreLib)
+    implementation(projects.composeCoreLib)
     implementation(projects.authCommonLibApi)
 
 

@@ -17,7 +17,8 @@ import ru.ari.navigation.rememberNavigationState
 import ru.ari.navigation.toEntries
 
 val PRE_LOGIN_ROUTES = persistentListOf(
-    Route.PreLogin.LoginScreenRoute
+    Route.PreLogin.LoginScreenRoute,
+    Route.PreLogin.RegistrationScreenRoute
 )
 
 @Composable
