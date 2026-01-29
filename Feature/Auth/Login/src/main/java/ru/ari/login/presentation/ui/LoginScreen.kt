@@ -32,8 +32,8 @@ import ru.ari.designsystem.components.WiseDubsSecureTextField
 import ru.ari.designsystem.components.WiseDubsTextField
 import ru.ari.designsystem.theme.WiseDubsAppTheme
 import ru.ari.login.R
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenAction
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenUiState
+import ru.ari.login.presentation.contract.LoginScreenAction
+import ru.ari.login.presentation.contract.LoginScreenUiState
 
 @Composable
 fun LoginScreen(

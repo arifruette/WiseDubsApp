@@ -17,7 +17,8 @@ import ru.ari.navigation.rememberNavigationState
 import ru.ari.navigation.toEntries
 
 val PRE_LOGIN_ROUTES = persistentListOf(
-    Route.PreLogin.LoginScreenRoute
+    Route.PreLogin.LoginScreenRoute,
+    Route.PreLogin.RegistrationScreenRoute
 )
 
 @Composable
@@ -29,7 +30,7 @@ fun PreLoginNavigation(
         startRoute = Route.PreLogin.LoginScreenRoute,
         topLevelRoutes = PRE_LOGIN_ROUTES
     )
-    val preLoginNavigator = remember {
+    val preLoginNavigator = remember(preLoginNavigationState) {
         BaseNavigatorImpl(preLoginNavigationState)
     }
     CompositionLocalProvider(

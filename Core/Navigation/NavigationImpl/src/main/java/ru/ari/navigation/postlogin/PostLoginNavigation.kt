@@ -29,7 +29,7 @@ fun PostLoginNavigation(
         startRoute = Route.PostLogin.SharingScreenRoute,
         topLevelRoutes = POST_LOGIN_ROUTES
     )
-    val postLoginNavigator = remember {
+    val postLoginNavigator = remember(postLoginNavigationState) {
         BaseNavigatorImpl(postLoginNavigationState)
     }
     CompositionLocalProvider(

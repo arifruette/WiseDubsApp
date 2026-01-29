@@ -1,9 +1,12 @@
 package ru.ari.wisedubsapp
 
 import android.app.Application
+import ru.ari.auth.common.api.di.AuthCommonApi
+import ru.ari.auth.common.impl.di.DaggerAuthCommonComponent
 import ru.ari.cache.datastore.di.DaggerCacheLibComponent
 import ru.ari.cache.di.CacheApi
 import ru.ari.di.DepsProvider
+import ru.ari.di.deps
 import ru.ari.network.di.DaggerNetworkComponent
 import ru.ari.network.di.NetworkApi
 import ru.ari.wisedubsapp.di.component.AppComponent
@@ -22,8 +25,11 @@ class WiseDubsApplication : Application(), DepsProvider {
         register(NetworkApi::class.java) {
             DaggerNetworkComponent.factory().create(
                 baseUrl = BuildConfig.BASE_API_URL,
-                cacheApi = getDeps(CacheApi::class.java)
+                cacheApi = deps()
             )
+        }
+        register(AuthCommonApi::class.java) {
+            DaggerAuthCommonComponent.factory().create(deps(), deps())
         }
     }
 

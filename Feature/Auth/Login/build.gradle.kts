@@ -26,10 +26,18 @@ android {
             )
         }
     }
+    buildFeatures {
+        compose = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+composeCompiler {
+    reportsDestination.set(layout.buildDirectory.dir("compose_compiler"))
+    metricsDestination.set(layout.buildDirectory.dir("compose_compiler"))
 }
 
 dependencies {
@@ -37,6 +45,7 @@ dependencies {
     implementation(projects.networkLibApi)
     implementation(projects.cacheLibApi)
     implementation(projects.diCoreLib)
+    implementation(projects.authCommonLibApi)
 
     implementation(projects.composeCoreLib)
 

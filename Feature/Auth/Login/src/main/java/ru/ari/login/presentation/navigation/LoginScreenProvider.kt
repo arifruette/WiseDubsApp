@@ -5,18 +5,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import ru.ari.composelib.LocalPreLoginNavigator
 import ru.ari.composelib.LocalRootNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.di.deps
 import ru.ari.login.di.component.DaggerLoginComponent
 import ru.ari.login.presentation.ui.LoginScreen
 import ru.ari.login.presentation.viewmodel.LoginViewModel
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenUiEffect
+import ru.ari.login.presentation.contract.LoginScreenUiEffect
 import ru.ari.navigation.Route
 import ru.ari.navigation.di.RouteEntryProvider
 import javax.inject.Inject
@@ -26,9 +28,10 @@ class LoginScreenProvider @Inject constructor() : RouteEntryProvider {
         entry<Route.PreLogin.LoginScreenRoute> {
             val viewModelStoreOwner = LocalViewModelStoreOwner.current
             val context = LocalContext.current
+            // todo: думаю для компонента следуюет создавать viewmodel в качестве холдера
             val component = remember(viewModelStoreOwner) {
                 context.run {
-                    DaggerLoginComponent.factory().create(deps(), deps())
+                    DaggerLoginComponent.factory().create(deps())
                 }
             }
             val loginViewModel = daggerViewModel<LoginViewModel> {
@@ -44,6 +47,7 @@ private fun LoginScreenNavigationRoute(
     loginViewModel: LoginViewModel
 ) {
     val rootNavigator = LocalRootNavigator.current
+    val authNavigator = LocalPreLoginNavigator.current
 
     val context = LocalContext.current
 
@@ -69,8 +73,7 @@ private fun LoginScreenNavigationRoute(
         uiState = uiState,
         onAction = loginViewModel::onAction,
         navigateToRegistrationScreen = {
-            // TODO: поменять когда добавится экран реги
-            rootNavigator.navigate(Route.PreLogin)
+            authNavigator.navigate(Route.PreLogin.RegistrationScreenRoute)
         }
     )
 }

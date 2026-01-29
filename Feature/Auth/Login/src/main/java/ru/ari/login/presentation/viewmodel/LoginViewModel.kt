@@ -9,18 +9,17 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.ari.login.domain.models.UserLogin
-import ru.ari.login.domain.usecase.LoginUserUseCase
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenAction
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenUiEffect
-import ru.ari.login.presentation.viewmodel.contract.LoginScreenUiState
+import ru.ari.auth.common.api.domain.interactor.AuthInteractor
+import ru.ari.login.presentation.contract.LoginScreenAction
+import ru.ari.login.presentation.contract.LoginScreenUiEffect
+import ru.ari.login.presentation.contract.LoginScreenUiState
 import ru.ari.network.domain.models.onError
 import ru.ari.network.domain.models.onException
 import ru.ari.network.domain.models.onSuccess
 import javax.inject.Inject
 
 class LoginViewModel @Inject constructor(
-    private val loginUserUseCase: LoginUserUseCase,
+    private val authInteractor: AuthInteractor
 ) : ViewModel() {
 
     private val _uiState: MutableStateFlow<LoginScreenUiState> =
@@ -48,9 +47,9 @@ class LoginViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val result =
-                loginUserUseCase(UserLogin(uiState.value.emailText, uiState.value.passwordText))
+                authInteractor.login(uiState.value.emailText, uiState.value.passwordText)
             result.onSuccess {
-                _uiEffect.emit(LoginScreenUiEffect.NavigateToMainScreen )
+                _uiEffect.emit(LoginScreenUiEffect.NavigateToMainScreen)
                 _uiState.update { it.copy(isLoading = false) }
             }.onError { code, message ->
                 _uiEffect.emit(LoginScreenUiEffect.ShowError(message))

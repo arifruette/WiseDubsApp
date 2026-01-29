@@ -1,0 +1,12 @@
+package ru.ari.auth.common.api.domain.interactor
+
+import ru.ari.auth.common.api.domain.models.Token
+import ru.ari.auth.common.api.domain.models.UserRegister
+import ru.ari.auth.common.api.domain.models.params.UserRegisterParams
+import ru.ari.network.domain.models.Result
+
+interface AuthInteractor {
+  suspend fun login(email: String, password: String): Result<Token>
+  suspend fun register(user: UserRegisterParams): Result<UserRegister>
+  suspend fun registerAndLogin(user: UserRegisterParams): Result<Token>
+}
