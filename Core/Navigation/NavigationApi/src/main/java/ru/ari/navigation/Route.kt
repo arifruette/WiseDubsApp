@@ -1,9 +1,11 @@
 package ru.ari.navigation
 
+import androidx.compose.runtime.Stable
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Stable
 sealed interface Route : NavKey {
 
     @Serializable

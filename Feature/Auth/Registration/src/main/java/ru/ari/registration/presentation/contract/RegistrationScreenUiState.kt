@@ -1,5 +1,8 @@
 package ru.ari.registration.presentation.contract
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class RegistrationScreenUiState(
     val emailText: String = "",
     val telegramIdText: String = "",

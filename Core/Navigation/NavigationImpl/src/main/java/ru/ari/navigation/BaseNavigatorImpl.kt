@@ -1,8 +1,6 @@
 package ru.ari.navigation
 
 import androidx.navigation3.runtime.NavKey
-import kotlin.collections.last
-import kotlin.collections.removeLastOrNull
 
 class BaseNavigatorImpl(private val state: NavigationState): Navigator {
     override fun navigate(route: NavKey){

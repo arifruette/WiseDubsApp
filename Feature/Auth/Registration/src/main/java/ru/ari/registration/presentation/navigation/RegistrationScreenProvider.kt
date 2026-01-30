@@ -4,16 +4,14 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import ru.ari.composelib.LocalPreLoginNavigator
 import ru.ari.composelib.LocalRootNavigator
 import ru.ari.composelib.daggerViewModel
+import ru.ari.composelib.di.utils.rememberScopedComponent
 import ru.ari.di.deps
 import ru.ari.navigation.Route
 import ru.ari.navigation.di.RouteEntryProvider
@@ -26,19 +24,15 @@ import javax.inject.Inject
 class RegistrationScreenProvider @Inject constructor(): RouteEntryProvider {
     override fun EntryProviderScope<NavKey>.provideRoute() {
         entry<Route.PreLogin.RegistrationScreenRoute> {
-            val viewModelStoreOwner = LocalViewModelStoreOwner.current
             val context = LocalContext.current
-            // todo: думаю для компонента следуюет создавать viewmodel в качестве холдера
-            val component = remember(viewModelStoreOwner) {
+            val component = rememberScopedComponent {
                 context.run {
                     DaggerRegistrationComponent.factory().create(deps())
                 }
             }
-            val registrationViewModel = daggerViewModel<RegistrationViewModel>(
-                viewModelFactoryCreator = {
-                    component.registrationViewModelFactory
-                }
-            )
+            val registrationViewModel = daggerViewModel<RegistrationViewModel> {
+                component.registrationViewModelFactory
+            }
             RegistrationScreenRoute(registrationViewModel)
         }
     }
@@ -76,7 +70,7 @@ private fun RegistrationScreenRoute(
         uiState = uiState,
         onAction = viewModel::onAction,
         navigateToLoginScreen = {
-            authNavigator.navigate(Route.PreLogin.LoginScreenRoute)
+            authNavigator.goBack()
         }
     )
 }

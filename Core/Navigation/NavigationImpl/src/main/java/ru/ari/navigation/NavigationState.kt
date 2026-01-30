@@ -75,7 +75,8 @@ fun NavigationState.toEntries(
             // благодаря предоставлению LocalViewModelStoreOwner для каждого из них
             // поэтому можно просто вызвать функцию viewModel с фабрикой и
             // получить готовенькую viewModel с нужным жц
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
+            remember { LogNavEntryDecorator() },
         )
         rememberDecoratedNavEntries(
             backStack = stack,
