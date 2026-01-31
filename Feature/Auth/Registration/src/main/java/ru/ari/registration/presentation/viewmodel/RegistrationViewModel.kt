@@ -46,6 +46,9 @@ class RegistrationViewModel @Inject constructor(
             is RegistrationScreenAction.ChangePasswordVisibility -> changePasswordVisibility(action.passwordField)
             is RegistrationScreenAction.ChangeTelegramIdState -> changeTelegramIdState(action.telegramId)
             is RegistrationScreenAction.RegisterUser -> registerUser()
+            is RegistrationScreenAction.NavigateToLoginScreen -> viewModelScope.launch {
+                _uiEffect.emit(RegistrationScreenUiEffect.NavigateToLoginScreen)
+            }
         }
     }
 

@@ -60,6 +60,10 @@ private fun RegistrationScreenRoute(
                 is RegistrationScreenUiEffect.NavigateToMainScreen -> {
                     rootNavigator.navigate(Route.PostLogin)
                 }
+
+                is RegistrationScreenUiEffect.NavigateToLoginScreen -> {
+                    authNavigator.navigate(Route.PreLogin.LoginScreenRoute)
+                }
             }
         }
     }
@@ -69,8 +73,5 @@ private fun RegistrationScreenRoute(
     RegistrationScreen(
         uiState = uiState,
         onAction = viewModel::onAction,
-        navigateToLoginScreen = {
-            authNavigator.goBack()
-        }
     )
 }

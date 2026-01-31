@@ -33,14 +33,13 @@ import ru.ari.designsystem.components.WiseDubsTextField
 import ru.ari.designsystem.theme.WiseDubsAppTheme
 import ru.ari.registration.R
 import ru.ari.registration.presentation.contract.RegistrationScreenAction
-import ru.ari.registration.presentation.models.PasswordField
 import ru.ari.registration.presentation.contract.RegistrationScreenUiState
+import ru.ari.registration.presentation.models.PasswordField
 
 @Composable
 fun RegistrationScreen(
     uiState: RegistrationScreenUiState,
     onAction: (RegistrationScreenAction) -> Unit,
-    navigateToLoginScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val keyBoardController = LocalSoftwareKeyboardController.current
@@ -154,7 +153,7 @@ fun RegistrationScreen(
                 OutlinedButton(
                     onClick = {
                         keyBoardController?.hide()
-                        navigateToLoginScreen()
+                        onAction(RegistrationScreenAction.NavigateToLoginScreen)
                     },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
@@ -193,7 +192,6 @@ private fun RegistrationScreenPreview() {
             RegistrationScreen(
                 uiState = RegistrationScreenUiState(),
                 onAction = {},
-                navigateToLoginScreen = {},
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)

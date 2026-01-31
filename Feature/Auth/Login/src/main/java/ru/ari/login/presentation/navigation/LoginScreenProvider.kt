@@ -59,6 +59,10 @@ private fun LoginScreenNavigationRoute(
                 is LoginScreenUiEffect.NavigateToMainScreen -> {
                     rootNavigator.navigate(Route.PostLogin)
                 }
+
+                is LoginScreenUiEffect.NavigateToRegistrationScreen -> {
+                    authNavigator.navigate(Route.PreLogin.RegistrationScreenRoute)
+                }
             }
         }
     }
@@ -67,9 +71,6 @@ private fun LoginScreenNavigationRoute(
 
     LoginScreen(
         uiState = uiState,
-        onAction = loginViewModel::onAction,
-        navigateToRegistrationScreen = {
-            authNavigator.navigate(Route.PreLogin.RegistrationScreenRoute)
-        }
+        onAction = loginViewModel::onAction
     )
 }

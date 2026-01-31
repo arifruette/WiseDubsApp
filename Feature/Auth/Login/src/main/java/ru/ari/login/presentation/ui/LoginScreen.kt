@@ -39,7 +39,6 @@ import ru.ari.login.presentation.contract.LoginScreenUiState
 fun LoginScreen(
     uiState: LoginScreenUiState,
     onAction: (LoginScreenAction) -> Unit,
-    navigateToRegistrationScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val keyBoardController = LocalSoftwareKeyboardController.current
@@ -104,7 +103,7 @@ fun LoginScreen(
                 OutlinedButton(
                     onClick = {
                         keyBoardController?.hide()
-                        navigateToRegistrationScreen()
+                        onAction(LoginScreenAction.NavigateToRegistrationScreen)
                     },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -142,7 +141,6 @@ private fun LoginScreenPreview() {
             LoginScreen(
                 uiState = LoginScreenUiState(),
                 onAction = {},
-                navigateToRegistrationScreen = {},
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)

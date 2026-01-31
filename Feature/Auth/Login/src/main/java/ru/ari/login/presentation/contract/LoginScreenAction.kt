@@ -8,4 +8,5 @@ sealed interface LoginScreenAction {
     data class ChangeEmailState(val email: String) : LoginScreenAction
     data class ChangePasswordState(val password: String) : LoginScreenAction
     data object ChangePasswordVisibility : LoginScreenAction
+    data object NavigateToRegistrationScreen : LoginScreenAction
 }
