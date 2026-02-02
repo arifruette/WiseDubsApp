@@ -54,6 +54,7 @@ class RegistrationViewModel @Inject constructor(
 
     private fun registerUser() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             if (validateUserCredentials()) {
                 val result = authInteractor.registerAndLogin(
                     user = UserRegisterParams(
@@ -75,6 +76,7 @@ class RegistrationViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false) }
                 }
             }
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
