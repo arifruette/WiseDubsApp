@@ -38,6 +38,10 @@ class LoginViewModel @Inject constructor(
             is LoginScreenAction.ChangePasswordState -> changePasswordState(action.password)
 
             is LoginScreenAction.ChangePasswordVisibility -> changePasswordVisibility()
+
+            is LoginScreenAction.NavigateToRegistrationScreen -> viewModelScope.launch {
+                _uiEffect.emit(LoginScreenUiEffect.NavigateToRegistrationScreen)
+            }
         }
     }
 
@@ -51,7 +55,7 @@ class LoginViewModel @Inject constructor(
             result.onSuccess {
                 _uiEffect.emit(LoginScreenUiEffect.NavigateToMainScreen)
                 _uiState.update { it.copy(isLoading = false) }
-            }.onError { code, message ->
+            }.onError { _, message ->
                 _uiEffect.emit(LoginScreenUiEffect.ShowError(message))
                 _uiState.update { it.copy(isLoading = false) }
             }.onException {

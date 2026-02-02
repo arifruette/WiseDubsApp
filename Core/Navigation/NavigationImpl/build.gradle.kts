@@ -39,6 +39,8 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.material.icons.extended)
 
     implementation(platform(libs.androidx.compose.bom))
 }

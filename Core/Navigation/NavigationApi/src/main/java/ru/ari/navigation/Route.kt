@@ -23,6 +23,12 @@ sealed interface Route : NavKey {
 
         @Serializable
         data object SharingScreenRoute : Route
+
+        @Serializable
+        data object PostsScreenRoute : Route
+
+        @Serializable
+        data object ProfileScreenRoute : Route
     }
 
 }

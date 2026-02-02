@@ -3,7 +3,6 @@ package ru.ari.wisedubsapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,6 +14,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toImmutableList
 import ru.ari.designsystem.theme.WiseDubsAppTheme
+import ru.ari.designsystem.theme.setEdgeToEdgeConfig
 import ru.ari.navigation.NavigationRoot
 import ru.ari.wisedubsapp.presentation.viewmodel.MainViewModel
 import ru.ari.wisedubsapp.presentation.viewmodel.contract.StartRouteState
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
         splash.setKeepOnScreenCondition {
             !isRouteAvailable
         }
-        enableEdgeToEdge()
+        setEdgeToEdgeConfig()
         setContent {
             val startRouteState by mainViewModel.uiState.collectAsStateWithLifecycle()
             isRouteAvailable = remember(startRouteState) {
