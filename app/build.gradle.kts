@@ -52,7 +52,7 @@ dependencies {
     implementation(projects.composeCoreLib)
     implementation(projects.login)
     implementation(projects.registration)
-    implementation(projects.sharing)
+    implementation(projects.sharingImpl)
     implementation(projects.designSystemCoreLib)
     implementation(projects.authCommonLibImpl)
 
