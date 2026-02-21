@@ -1,7 +1,9 @@
 ﻿package ru.ari.sharing.data.repository
 
 import retrofit2.HttpException
+import retrofit2.Retrofit
 import ru.ari.cache.domain.SharingPostDataSource
+import ru.ari.network.di.AuthRetrofit
 import ru.ari.network.domain.models.Result
 import ru.ari.sharing.api.domain.models.Post
 import ru.ari.sharing.api.domain.repository.SharingRepository
@@ -12,12 +14,14 @@ import javax.inject.Inject
 
 class SharingRepositoryImpl @Inject constructor(
     private val postsResponseApi: PostsResponseApi,
-    private val sharingPostDataSource: SharingPostDataSource
+    private val sharingPostDataSource: SharingPostDataSource,
+    @param:AuthRetrofit private val authRetrofit: Retrofit
 ) : SharingRepository {
 
     override suspend fun getPosts(forceRefresh: Boolean): Result<List<Post>> {
         return try {
-            val remotePosts = postsResponseApi.getPosts().map { it.toDomain() }
+            val baseUrl = authRetrofit.baseUrl().toString()
+            val remotePosts = postsResponseApi.getPosts().map { it.toDomain(baseUrl) }
             sharingPostDataSource.savePosts(remotePosts.map { it.toCacheModel() })
             Result.Success(remotePosts)
         } catch (e: HttpException) {

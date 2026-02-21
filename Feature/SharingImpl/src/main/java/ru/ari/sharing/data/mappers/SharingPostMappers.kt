@@ -7,7 +7,7 @@ import ru.ari.sharing.api.domain.models.PostImage
 import ru.ari.sharing.data.models.ImageResponse
 import ru.ari.sharing.data.models.PostResponse
 
-fun PostResponse.toDomain(): Post = Post(
+fun PostResponse.toDomain(baseUrl: String): Post = Post(
     id = id,
     title = title,
     description = description,
@@ -20,12 +20,12 @@ fun PostResponse.toDomain(): Post = Post(
     createdAt = createdAt,
     reservedBy = reservedBy,
     authorEmail = authorEmail,
-    images = images.map(ImageResponse::toDomain)
+    images = images.map { it.toDomain(baseUrl) }
 )
 
-private fun ImageResponse.toDomain(): PostImage = PostImage(
+private fun ImageResponse.toDomain(baseUrl: String): PostImage = PostImage(
     id = id,
-    url = url
+    url = resolveImageUrl(url = url, baseUrl = baseUrl)
 )
 
 fun Post.toCacheModel(): SharingPost = SharingPost(
@@ -69,3 +69,15 @@ private fun SharingPostImage.toDomain(): PostImage = PostImage(
     id = id,
     url = url
 )
+
+private fun resolveImageUrl(url: String, baseUrl: String): String {
+    val trimmedUrl = url.trim()
+
+    if (trimmedUrl.isEmpty()) {
+        return trimmedUrl
+    }
+
+    val normalizedBaseUrl = baseUrl.trimEnd('/')
+    val normalizedPath = if (trimmedUrl.startsWith("/")) trimmedUrl else "/$trimmedUrl"
+    return normalizedBaseUrl + normalizedPath
+}

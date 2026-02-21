@@ -5,7 +5,7 @@ import dagger.Binds
 import dagger.Module
 import ru.ari.sharing.api.domain.interactor.SharingInteractor
 import ru.ari.sharing.api.domain.repository.SharingRepository
-import ru.ari.sharing.data.repository.MockSharingRepositoryImpl
+import ru.ari.sharing.data.repository.SharingRepositoryImpl
 import ru.ari.sharing.domain.interactor.SharingInteractorImpl
 import ru.ari.sharing.presentation.viewmodel.SharingViewModelFactory
 
@@ -19,7 +19,7 @@ interface SharingBindsModule {
 
     @Binds
     fun bindSharingRepository(
-        sharingRepositoryImpl: MockSharingRepositoryImpl
+        sharingRepositoryImpl: SharingRepositoryImpl
     ): SharingRepository
 
     @Binds

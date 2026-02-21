@@ -9,15 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import ru.ari.designsystem.components.WiseDubsProgressIndicator
-import ru.ari.sharing.presentation.constants.DefaultPost
 import ru.ari.sharing.presentation.contract.SharingScreenAction
 import ru.ari.sharing.presentation.contract.SharingScreenUiState
 import ru.ari.sharing.presentation.ui.components.PostCard
+import ru.ari.sharing.presentation.ui.components.PostCardShimmer
 
 @Composable
 internal fun SharingScreen(
@@ -30,34 +31,54 @@ internal fun SharingScreen(
         modifier = modifier,
         onRefresh = { onAction(SharingScreenAction.RefreshPosts) }
     ) {
-        val displayPosts = if (uiState.isLoading) {
-            listOf(DefaultPost, DefaultPost, DefaultPost)
-        } else {
-            uiState.posts
-        }
+        when {
+            uiState.isLoading -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = MaterialTheme.colorScheme.background)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    repeat(3) {
+                        PostCardShimmer()
+                    }
+                }
+            }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = MaterialTheme.colorScheme.background)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                displayPosts.forEach { post ->
-                    PostCard(
-                        post = post,
-                        navigateToDetailsScreen = {
-                            onAction(SharingScreenAction.OpenPostDetails(it))
-                        },
-                        onBookingButtonClick = {
-                            onAction(SharingScreenAction.BookItem(it))
-                        }
+            uiState.posts.isEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Постов пока нет",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
-            if (uiState.isLoading && uiState.posts.isEmpty()) {
-                WiseDubsProgressIndicator(modifier = Modifier.fillMaxSize())
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = MaterialTheme.colorScheme.background)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    uiState.posts.forEach { post ->
+                        PostCard(
+                            post = post,
+                            navigateToDetailsScreen = {
+                                onAction(SharingScreenAction.OpenPostDetails(it))
+                            },
+                            onBookingButtonClick = {
+                                onAction(SharingScreenAction.BookItem(it))
+                            }
+                        )
+                    }
+                }
             }
         }
     }

@@ -167,6 +167,80 @@ fun PostCard(
 }
 
 @Composable
+fun PostCardShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = MaterialTheme.colorScheme.background, shape = RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat(3) {
+                ShimmerPlaceholder(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            ShimmerPlaceholder(
+                modifier = Modifier
+                    .width(7.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(16.dp))
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                ShimmerPlaceholder(
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                )
+                ShimmerPlaceholder(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                )
+                ShimmerPlaceholder(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            ShimmerPlaceholder(
+                modifier = Modifier
+                    .width(110.dp)
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(16.dp))
+            )
+        }
+    }
+}
+
+@Composable
 private fun ShimmerPlaceholder(modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "image_shimmer")
     val translateX = transition.animateFloat(
