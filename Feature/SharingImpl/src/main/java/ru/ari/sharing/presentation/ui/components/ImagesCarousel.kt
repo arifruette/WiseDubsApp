@@ -1,0 +1,108 @@
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import ru.ari.designsystem.components.ShimmerPlaceholder
+import ru.ari.sharing.api.domain.models.PostImage
+
+@Composable
+fun ImagesCarousel(
+    images: List<PostImage>,
+    modifier: Modifier = Modifier
+) {
+    when (images.size) {
+        0 -> EmptyCard(modifier)
+        else -> ImagesCarouselInternal(images, modifier)
+    }
+}
+
+@Composable
+private fun ImagesCarouselInternal(images: List<PostImage>, modifier: Modifier = Modifier) {
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { images.size }
+    )
+
+    HorizontalPager(
+        state = pagerState,
+        modifier = modifier.fillMaxWidth(),
+        pageSize = PageSize.Fill,
+        contentPadding = PaddingValues(horizontal = 32.dp),
+        pageSpacing = 12.dp
+    ) { page ->
+        CarouselCard(
+            image = images[page],
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(12.dp))
+        )
+    }
+}
+
+@Composable
+private fun CarouselCard(
+    image: PostImage,
+    modifier: Modifier = Modifier
+) {
+    SubcomposeAsyncImage(
+        model = image.url,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        loading = {
+            ShimmerPlaceholder(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+            )
+        },
+        error = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+            )
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun EmptyCard(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .aspectRatio(16f / 9f)
+            .background(color = MaterialTheme.colorScheme.secondaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Пусто",
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}

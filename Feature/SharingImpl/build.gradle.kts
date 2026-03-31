@@ -44,6 +44,8 @@ dependencies {
 
     implementation(projects.composeCoreLib)
     implementation(projects.designSystemCoreLib)
+    implementation("com.google.accompanist:accompanist-pager:0.28.0")
+    implementation("com.google.accompanist:accompanist-pager-indicators:0.28.0")
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
@@ -55,6 +57,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     implementation(libs.dagger)
+    implementation(libs.androidx.material3)
     kapt(libs.daggerCompiler)
 
     implementation(libs.retrofit)

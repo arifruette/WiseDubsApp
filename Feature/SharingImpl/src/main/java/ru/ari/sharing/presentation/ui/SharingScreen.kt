@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +41,7 @@ internal fun SharingScreen(
                         .background(color = MaterialTheme.colorScheme.background)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    repeat(3) {
+                    repeat(5) {
                         PostCardShimmer()
                     }
                 }
@@ -61,13 +63,12 @@ internal fun SharingScreen(
             }
 
             else -> {
-                Column(
+                LazyColumn (
                     modifier = Modifier
                         .fillMaxSize()
                         .background(color = MaterialTheme.colorScheme.background)
-                        .verticalScroll(rememberScrollState())
                 ) {
-                    uiState.posts.forEach { post ->
+                    items(uiState.posts) { post ->
                         PostCard(
                             post = post,
                             navigateToDetailsScreen = {
