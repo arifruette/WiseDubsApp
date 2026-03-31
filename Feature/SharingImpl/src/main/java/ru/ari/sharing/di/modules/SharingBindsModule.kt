@@ -7,6 +7,8 @@ import ru.ari.sharing.api.domain.interactor.SharingInteractor
 import ru.ari.sharing.api.domain.repository.SharingRepository
 import ru.ari.sharing.data.repository.SharingRepositoryImpl
 import ru.ari.sharing.domain.interactor.SharingInteractorImpl
+import ru.ari.sharing.domain.mapper.SharingPostUiMapper
+import ru.ari.sharing.presentation.mappers.SharingPostUiMapperImpl
 import ru.ari.sharing.presentation.viewmodel.SharingViewModelFactory
 
 @Module
@@ -26,4 +28,9 @@ interface SharingBindsModule {
     fun bindSharingInteractor(
         sharingInteractorImpl: SharingInteractorImpl
     ): SharingInteractor
+
+    @Binds
+    fun bindSharingPostUiMapper(
+        sharingPostUiMapperImpl: SharingPostUiMapperImpl
+    ): SharingPostUiMapper
 }

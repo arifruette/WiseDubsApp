@@ -1,6 +1,5 @@
-﻿package ru.ari.sharing.presentation.viewmodel
+package ru.ari.sharing.presentation.viewmodel
 
-import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,17 +12,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ari.network.domain.models.Result
 import ru.ari.sharing.api.domain.interactor.SharingInteractor
+import ru.ari.sharing.domain.mapper.SharingPostUiMapper
 import ru.ari.sharing.presentation.contract.SharingScreenAction
 import ru.ari.sharing.presentation.contract.SharingScreenUiEffect
 import ru.ari.sharing.presentation.contract.SharingScreenUiState
 import javax.inject.Inject
 
-@Stable
 class SharingViewModel @Inject constructor(
-    private val sharingInteractor: SharingInteractor
+    private val sharingInteractor: SharingInteractor,
+    private val sharingPostUiMapper: SharingPostUiMapper
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SharingScreenUiState())
+    private val _uiState = MutableStateFlow<SharingScreenUiState>(SharingScreenUiState.Loading)
     val uiState: StateFlow<SharingScreenUiState> = _uiState.asStateFlow()
 
     private val _uiEffect = MutableSharedFlow<SharingScreenUiEffect>()
@@ -44,37 +44,54 @@ class SharingViewModel @Inject constructor(
     }
 
     private fun loadPosts(isRefresh: Boolean) {
-        _uiState.update {
-            it.copy(
-                isLoading = !isRefresh,
-                isRefreshing = isRefresh
-            )
+        if (isRefresh) {
+            markRefreshing()
+        } else {
+            _uiState.value = SharingScreenUiState.Loading
         }
+
         viewModelScope.launch {
             when (val result = sharingInteractor.getPosts(forceRefresh = isRefresh)) {
                 is Result.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isRefreshing = false,
-                            posts = result.data
-                        )
+                    val uiPosts = sharingPostUiMapper.map(result.data)
+                    _uiState.value = if (uiPosts.isEmpty()) {
+                        SharingScreenUiState.Empty
+                    } else {
+                        SharingScreenUiState.Content(posts = uiPosts, isRefreshing = false)
                     }
                 }
 
                 is Result.Error -> {
-                    _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
+                    clearRefreshAfterFailure(isRefresh)
                     _uiEffect.emit(SharingScreenUiEffect.ShowError(result.message))
                 }
 
                 is Result.Exception -> {
-                    _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
+                    clearRefreshAfterFailure(isRefresh)
                     _uiEffect.emit(
                         SharingScreenUiEffect.ShowError(
                             result.error.message ?: "Неожиданная ошибка"
                         )
                     )
                 }
+            }
+        }
+    }
+
+    private fun markRefreshing() {
+        _uiState.update { state ->
+            when (state) {
+                is SharingScreenUiState.Content -> state.copy(isRefreshing = true)
+                else -> SharingScreenUiState.Loading
+            }
+        }
+    }
+
+    private fun clearRefreshAfterFailure(isRefresh: Boolean) {
+        _uiState.update { state ->
+            when {
+                isRefresh && state is SharingScreenUiState.Content -> state.copy(isRefreshing = false)
+                else -> SharingScreenUiState.Empty
             }
         }
     }

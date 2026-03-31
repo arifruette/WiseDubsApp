@@ -1,4 +1,4 @@
-﻿@file:Suppress("DEPRECATION")
+@file:Suppress("DEPRECATION")
 
 package ru.ari.sharing.presentation.ui
 
@@ -28,13 +28,15 @@ internal fun SharingScreen(
     uiState: SharingScreenUiState,
     onAction: (SharingScreenAction) -> Unit
 ) {
+    val isRefreshing = (uiState as? SharingScreenUiState.Content)?.isRefreshing == true
+
     SwipeRefresh(
-        state = rememberSwipeRefreshState(uiState.isRefreshing),
+        state = rememberSwipeRefreshState(isRefreshing),
         modifier = modifier,
         onRefresh = { onAction(SharingScreenAction.RefreshPosts) }
     ) {
-        when {
-            uiState.isLoading -> {
+        when (uiState) {
+            SharingScreenUiState.Loading -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -47,7 +49,7 @@ internal fun SharingScreen(
                 }
             }
 
-            uiState.posts.isEmpty() -> {
+            SharingScreenUiState.Empty -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -62,13 +64,16 @@ internal fun SharingScreen(
                 }
             }
 
-            else -> {
-                LazyColumn (
+            is SharingScreenUiState.Content -> {
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(color = MaterialTheme.colorScheme.background)
                 ) {
-                    items(uiState.posts) { post ->
+                    items(
+                        items = uiState.posts,
+                        key = { post -> post.id }
+                    ) { post ->
                         PostCard(
                             post = post,
                             navigateToDetailsScreen = {

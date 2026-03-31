@@ -1,8 +1,5 @@
-﻿package ru.ari.sharing.presentation.contract
+package ru.ari.sharing.presentation.contract
 
-import androidx.compose.runtime.Stable
-
-@Stable
 sealed interface SharingScreenAction {
     data object LoadPosts : SharingScreenAction
     data object RefreshPosts : SharingScreenAction

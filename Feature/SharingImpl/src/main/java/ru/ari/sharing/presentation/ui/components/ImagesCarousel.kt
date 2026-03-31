@@ -1,3 +1,5 @@
+package ru.ari.sharing.presentation.ui.components
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import kotlinx.collections.immutable.ImmutableList
 import ru.ari.designsystem.components.ShimmerPlaceholder
-import ru.ari.sharing.api.domain.models.PostImage
+import ru.ari.sharing.presentation.models.PostImageUiModel
 
 @Composable
 fun ImagesCarousel(
-    images: List<PostImage>,
+    images: ImmutableList<PostImageUiModel>,
     modifier: Modifier = Modifier
 ) {
     when (images.size) {
@@ -35,7 +38,10 @@ fun ImagesCarousel(
 }
 
 @Composable
-private fun ImagesCarouselInternal(images: List<PostImage>, modifier: Modifier = Modifier) {
+private fun ImagesCarouselInternal(
+    images: ImmutableList<PostImageUiModel>,
+    modifier: Modifier = Modifier
+) {
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { images.size }
@@ -60,7 +66,7 @@ private fun ImagesCarouselInternal(images: List<PostImage>, modifier: Modifier =
 
 @Composable
 private fun CarouselCard(
-    image: PostImage,
+    image: PostImageUiModel,
     modifier: Modifier = Modifier
 ) {
     SubcomposeAsyncImage(

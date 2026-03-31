@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.collections.immutable)
     implementation(libs.accompanist.swiperefresh)
     implementation(libs.accompanist.placeholder)
     implementation(libs.coil.compose)

@@ -1,11 +1,21 @@
-﻿package ru.ari.sharing.presentation.contract
+package ru.ari.sharing.presentation.contract
 
 import androidx.compose.runtime.Immutable
-import ru.ari.sharing.api.domain.models.Post
+import kotlinx.collections.immutable.ImmutableList
+import ru.ari.sharing.presentation.models.PostUiModel
 
 @Immutable
-data class SharingScreenUiState(
-    val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false,
-    val posts: List<Post> = emptyList()
-)
+sealed interface SharingScreenUiState {
+
+    @Immutable
+    data object Loading : SharingScreenUiState
+
+    @Immutable
+    data object Empty : SharingScreenUiState
+
+    @Immutable
+    data class Content(
+        val posts: ImmutableList<PostUiModel>,
+        val isRefreshing: Boolean
+    ) : SharingScreenUiState
+}
