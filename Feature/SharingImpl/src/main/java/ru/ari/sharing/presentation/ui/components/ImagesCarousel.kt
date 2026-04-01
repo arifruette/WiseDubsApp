@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -25,7 +26,7 @@ import coil.compose.SubcomposeAsyncImage
 import kotlinx.collections.immutable.ImmutableList
 import ru.ari.designsystem.components.ShimmerPlaceholder
 import ru.ari.sharing.presentation.models.PostImageUiModel
-
+import androidx.compose.foundation.pager.PagerState
 @Composable
 fun ImagesCarousel(
     images: ImmutableList<PostImageUiModel>,
@@ -47,23 +48,54 @@ private fun ImagesCarouselInternal(
         pageCount = { images.size }
     )
 
-    HorizontalPager(
-        state = pagerState,
+    Column(
         modifier = modifier.fillMaxWidth(),
-        pageSize = PageSize.Fill,
-        contentPadding = PaddingValues(horizontal = 32.dp),
-        pageSpacing = 12.dp
-    ) { page ->
-        CarouselCard(
-            image = images[page],
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(12.dp))
-        )
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth(),
+                pageSize = PageSize.Fill,
+                contentPadding = PaddingValues(horizontal = 32.dp),
+                pageSpacing = 12.dp
+            ) { page ->
+                CarouselCard(
+                    image = images[page],
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            }
+
+            TextIndicator(
+                pagerState = pagerState,
+                totalCount = images.size,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 44.dp, bottom = 12.dp)
+            )
+        }
     }
 }
 
+@Composable
+private fun TextIndicator(
+    pagerState: PagerState,
+    totalCount: Int,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = "${pagerState.currentPage + 1} / $totalCount",
+        modifier = modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(Color.Black.copy(alpha = 0.55f))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        color = Color.White,
+        style = MaterialTheme.typography.labelMedium
+    )
+}
 @Composable
 private fun CarouselCard(
     image: PostImageUiModel,
