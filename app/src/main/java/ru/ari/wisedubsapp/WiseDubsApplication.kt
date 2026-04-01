@@ -3,8 +3,8 @@ package ru.ari.wisedubsapp
 import android.app.Application
 import ru.ari.auth.common.api.di.AuthCommonApi
 import ru.ari.auth.common.impl.di.DaggerAuthCommonComponent
-import ru.ari.cache.datastore.di.DaggerCacheLibComponent
 import ru.ari.cache.di.CacheApi
+import ru.ari.cache.di.DaggerCacheLibComponent
 import ru.ari.di.DepsProvider
 import ru.ari.di.deps
 import ru.ari.network.di.DaggerNetworkComponent
@@ -20,7 +20,7 @@ class WiseDubsApplication : Application(), DepsProvider {
 
     val depsStore = DepsStore().apply {
         register(CacheApi::class.java) {
-            DaggerCacheLibComponent.create()
+            DaggerCacheLibComponent.factory().create(applicationContext)
         }
         register(NetworkApi::class.java) {
             DaggerNetworkComponent.factory().create(
