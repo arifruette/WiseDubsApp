@@ -62,9 +62,6 @@ fun PostLoginNavigation(
         LocalPostLoginNavigator provides postLoginNavigator
     ) {
         val entryProvider = entryProvider {
-            entry<Route.PostLogin.PostsScreenRoute> {
-                Text(text = "Posts Screen")
-            }
             entry<Route.PostLogin.ProfileScreenRoute> {
                 Text(text = "Profile Screen")
             }

@@ -49,6 +49,8 @@ dependencies {
     implementation(projects.diCoreLib)
     implementation(projects.cacheLibImpl)
     implementation(projects.networkLibImpl)
+    implementation(projects.postsImpl)
+    implementation(projects.myPostsImpl)
     implementation(projects.composeCoreLib)
     implementation(projects.login)
     implementation(projects.registration)

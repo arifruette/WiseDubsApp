@@ -7,10 +7,10 @@ import dagger.Module
 import dagger.Provides
 import ru.ari.cache.domain.datastore.DataStoreHelper
 import ru.ari.cache.data.datastore.MockDataStoreHelperImpl
-import ru.ari.cache.data.room.SharingPostLocalDataSource
-import ru.ari.cache.data.room.dao.SharingPostDao
-import ru.ari.cache.data.room.database.SharingDatabase
-import ru.ari.cache.domain.SharingPostDataSource
+import ru.ari.cache.data.room.PostLocalDataSource
+import ru.ari.cache.data.room.dao.PostDao
+import ru.ari.cache.data.room.database.PostDatabase
+import ru.ari.cache.domain.PostDataSource
 import javax.inject.Singleton
 
 @Module
@@ -22,20 +22,20 @@ interface CacheLibModule {
 
     @Binds
     @Singleton
-    fun bindSharingPostDataSource(
-        sharingPostLocalDataSource: SharingPostLocalDataSource
-    ): SharingPostDataSource
+    fun bindPostDataSource(
+        postLocalDataSource: PostLocalDataSource
+    ): PostDataSource
 
     companion object {
         @Provides
         @Singleton
-        fun provideSharingDatabase(context: Context): SharingDatabase =
-            Room.databaseBuilder(context, SharingDatabase::class.java, "sharing_posts.db")
+        fun providePostDatabase(context: Context): PostDatabase =
+            Room.databaseBuilder(context, PostDatabase::class.java, "posts.db")
                 .fallbackToDestructiveMigration(true)
                 .build()
 
         @Provides
-        fun provideSharingPostDao(database: SharingDatabase): SharingPostDao =
-            database.sharingPostDao()
+        fun providePostDao(database: PostDatabase): PostDao =
+            database.postDao()
     }
 }
