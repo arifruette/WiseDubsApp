@@ -81,14 +81,18 @@ fun MyPostCard(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "Exchange: ${post.exchange}",
+                    text = "Обмен: ${post.exchange}",
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = if (post.isActive) "Published" else "Archived",
+                    text = if (post.isActive) {
+                        "Опубликован"
+                    } else {
+                        "В архиве"
+                    },
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )

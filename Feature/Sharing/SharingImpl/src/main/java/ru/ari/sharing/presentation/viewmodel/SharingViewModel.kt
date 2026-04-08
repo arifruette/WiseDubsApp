@@ -37,8 +37,13 @@ class SharingViewModel @Inject constructor(
             is SharingScreenAction.OpenPostDetails -> viewModelScope.launch {
                 _uiEffect.emit(SharingScreenUiEffect.NavigateToDetails(action.postId))
             }
+
             is SharingScreenAction.BookItem -> viewModelScope.launch {
-                _uiEffect.emit(SharingScreenUiEffect.ShowError("Бронирование будет доступно позже"))
+                _uiEffect.emit(
+                    SharingScreenUiEffect.ShowError(
+                        "Бронирование будет доступно позже"
+                    )
+                )
             }
         }
     }
@@ -70,7 +75,8 @@ class SharingViewModel @Inject constructor(
                     clearRefreshAfterFailure(isRefresh)
                     _uiEffect.emit(
                         SharingScreenUiEffect.ShowError(
-                            result.error.message ?: "Неожиданная ошибка"
+                            result.error.message
+                                ?: "Непредвиденная ошибка"
                         )
                     )
                 }

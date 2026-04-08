@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +27,7 @@ import coil.compose.SubcomposeAsyncImage
 import kotlinx.collections.immutable.ImmutableList
 import ru.ari.designsystem.components.ShimmerPlaceholder
 import ru.ari.sharing.presentation.models.PostImageUiModel
-import androidx.compose.foundation.pager.PagerState
+
 @Composable
 fun ImagesCarousel(
     images: ImmutableList<PostImageUiModel>,
@@ -96,6 +97,7 @@ private fun TextIndicator(
         style = MaterialTheme.typography.labelMedium
     )
 }
+
 @Composable
 private fun CarouselCard(
     image: PostImageUiModel,

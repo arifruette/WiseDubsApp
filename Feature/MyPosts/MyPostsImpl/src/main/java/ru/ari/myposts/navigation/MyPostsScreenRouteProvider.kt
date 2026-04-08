@@ -59,14 +59,17 @@ private fun MyPostsScreenRoute(
                 }
 
                 MyPostsScreenUiEffect.OpenCreatePost -> {
-                    Toast.makeText(context, "Post form route is not connected yet", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        context,
+                        "Экран формы поста пока не подключен",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
 
                 is MyPostsScreenUiEffect.OpenEditPost -> {
                     Toast.makeText(
                         context,
-                        "Post form route is not connected yet, id=${effect.postId}",
+                        "Экран формы поста пока не подключен, id=${effect.postId}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }

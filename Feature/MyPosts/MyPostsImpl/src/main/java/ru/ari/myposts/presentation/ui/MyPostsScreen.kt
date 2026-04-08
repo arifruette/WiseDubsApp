@@ -5,13 +5,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,21 +46,18 @@ fun MyPostsScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = {
-            Text(
-                text = "My posts",
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-            )
-        },
+        floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { actionHandler.onAction(MyPostsScreenAction.ClickCreate) },
-                shape = CircleShape
+                shape = CircleShape,
+                modifier = Modifier
+                    .padding(end = 4.dp)
+                    .offset(y = 16.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Create post"
+                    contentDescription = "Создать пост"
                 )
             }
         }
@@ -91,16 +91,15 @@ fun MyPostsScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 when (uiState) {
-                    is MyPostsScreenUiState.Loading -> EmptyState(
-                        text = "Loading posts...",
+                    is MyPostsScreenUiState.Loading -> LoadingState(
                         modifier = Modifier.fillMaxSize()
                     )
 
                     is MyPostsScreenUiState.Empty -> EmptyState(
                         text = if (uiState.selectedTab == MyPostsTab.Active) {
-                            "You have no active posts yet"
+                            "У вас пока нет активных постов"
                         } else {
-                            "You have no inactive posts yet"
+                            "У вас пока нет неактивных постов"
                         },
                         modifier = Modifier.fillMaxSize()
                     )
@@ -113,6 +112,18 @@ fun MyPostsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LoadingState(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
     }
 }
 
@@ -154,6 +165,6 @@ private fun EmptyState(
 }
 
 private fun MyPostsTab.title(): String = when (this) {
-    MyPostsTab.Active -> "Active"
-    MyPostsTab.Inactive -> "Inactive"
+    MyPostsTab.Active -> "Активные"
+    MyPostsTab.Inactive -> "Неактивные"
 }

@@ -63,7 +63,7 @@ fun PostLoginNavigation(
     ) {
         val entryProvider = entryProvider {
             entry<Route.PostLogin.ProfileScreenRoute> {
-                Text(text = "Profile Screen")
+                Text(text = "Экран профиля")
             }
             postLoginRoutes.fastForEach { routeProvider ->
                 with(routeProvider) {

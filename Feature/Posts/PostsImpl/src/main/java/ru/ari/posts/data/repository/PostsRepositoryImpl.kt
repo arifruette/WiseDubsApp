@@ -43,7 +43,7 @@ class PostsRepositoryImpl @Inject constructor(
         return when (val postsResult = getAllPosts(forceRefresh = true)) {
             is Result.Success -> {
                 postsResult.data.firstOrNull { it.id == id }?.let { Result.Success(it) }
-                    ?: Result.Error(404, "Post with id=$id not found")
+                    ?: Result.Error(404, "Пост с id=$id не найден")
             }
 
             is Result.Error -> postsResult

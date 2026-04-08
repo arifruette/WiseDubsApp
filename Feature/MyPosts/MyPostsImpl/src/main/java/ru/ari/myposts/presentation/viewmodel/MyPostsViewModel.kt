@@ -89,7 +89,8 @@ class MyPostsViewModel @Inject constructor(
                     publishFailure(
                         selectedTab = selectedTab,
                         isRefreshing = forceRefresh,
-                        message = result.error.message ?: "Unexpected error"
+                        message = result.error.message
+                            ?: "Непредвиденная ошибка"
                     )
                 }
             }
