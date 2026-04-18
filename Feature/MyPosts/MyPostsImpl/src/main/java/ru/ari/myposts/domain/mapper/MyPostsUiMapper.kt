@@ -6,4 +6,5 @@ import ru.ari.posts.api.domain.models.Post
 
 interface MyPostsUiMapper {
     fun map(posts: List<Post>): ImmutableList<MyPostUiModel>
+    fun map(post: Post): MyPostUiModel
 }

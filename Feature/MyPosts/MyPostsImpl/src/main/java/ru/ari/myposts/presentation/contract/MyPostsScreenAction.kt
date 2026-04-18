@@ -19,4 +19,10 @@ sealed interface MyPostsScreenAction {
 
     @Immutable
     data class ClickPost(val postId: Long) : MyPostsScreenAction
+
+    @Immutable
+    data class ClickArchiveAction(
+        val postId: Long,
+        val targetIsActive: Boolean
+    ) : MyPostsScreenAction
 }

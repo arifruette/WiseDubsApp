@@ -2,10 +2,14 @@ package ru.ari.posts.data.mappers
 
 import ru.ari.cache.domain.models.CachedPost
 import ru.ari.cache.domain.models.CachedPostImage
+import ru.ari.posts.api.domain.models.GroupedRoom
 import ru.ari.posts.api.domain.models.Post
 import ru.ari.posts.api.domain.models.PostImage
+import ru.ari.posts.api.domain.models.Room
+import ru.ari.posts.data.models.GroupedRoomsResponse
 import ru.ari.posts.data.models.ImageResponse
 import ru.ari.posts.data.models.PostResponse
+import ru.ari.posts.data.models.RoomResponse
 
 fun PostResponse.toDomain(baseUrl: String): Post = Post(
     id = id,
@@ -26,6 +30,11 @@ fun PostResponse.toDomain(baseUrl: String): Post = Post(
 private fun ImageResponse.toDomain(baseUrl: String): PostImage = PostImage(
     id = id,
     url = resolveImageUrl(url = url, baseUrl = baseUrl)
+)
+
+fun GroupedRoomsResponse.toDomain(): GroupedRoom = GroupedRoom(
+    corpus = corpus,
+    rooms = rooms.map(RoomResponse::toDomain)
 )
 
 fun Post.toCacheModel(): CachedPost = CachedPost(
@@ -68,6 +77,12 @@ private fun PostImage.toCacheModel(): CachedPostImage = CachedPostImage(
 private fun CachedPostImage.toDomain(): PostImage = PostImage(
     id = id,
     url = url
+)
+
+private fun RoomResponse.toDomain(): Room = Room(
+    id = id,
+    roomName = roomName,
+    corpus = corpus
 )
 
 private fun resolveImageUrl(url: String, baseUrl: String): String {

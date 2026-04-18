@@ -1,5 +1,7 @@
 package ru.ari.posts.di
 
+import android.content.Context
+import dagger.BindsInstance
 import dagger.Component
 import ru.ari.cache.di.CacheApi
 import ru.ari.network.di.NetworkApi
@@ -19,7 +21,8 @@ interface PostsComponent : PostsApi {
     interface Factory {
         fun create(
             networkApi: NetworkApi,
-            cacheApi: CacheApi
+            cacheApi: CacheApi,
+            @BindsInstance context: Context
         ): PostsComponent
     }
 }

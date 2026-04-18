@@ -34,7 +34,11 @@ class WiseDubsApplication : Application(), DepsProvider {
             DaggerAuthCommonComponent.factory().create(deps(), deps())
         }
         register(PostsApi::class.java) {
-            DaggerPostsComponent.factory().create(deps(), deps())
+            DaggerPostsComponent.factory().create(
+                networkApi = deps(),
+                cacheApi = deps(),
+                context = applicationContext
+            )
         }
     }
 

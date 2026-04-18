@@ -36,6 +36,7 @@ class MyPostsViewModel @Inject constructor(
     val uiEffect: SharedFlow<MyPostsScreenUiEffect> = _uiEffect.asSharedFlow()
 
     private var allPosts: ImmutableList<MyPostUiModel> = persistentListOf()
+    private var updatingPostIds: Set<Long> = emptySet()
     private var hasLoaded = false
 
     fun onAction(action: MyPostsScreenAction) {
@@ -52,6 +53,12 @@ class MyPostsViewModel @Inject constructor(
                 emitEffect(MyPostsScreenUiEffect.OpenEditPost(action.postId))
 
             is MyPostsScreenAction.SelectTab -> selectTab(action.tab)
+            is MyPostsScreenAction.ClickArchiveAction -> {
+                setPostActive(
+                    postId = action.postId,
+                    targetIsActive = action.targetIsActive
+                )
+            }
         }
     }
 
@@ -73,7 +80,7 @@ class MyPostsViewModel @Inject constructor(
             when (val result = postsInteractor.getMyPosts(forceRefresh)) {
                 is Result.Success -> {
                     hasLoaded = true
-                    allPosts = myPostsUiMapper.map(result.data)
+                    allPosts = myPostsUiMapper.map(result.data).applyArchiveActionAvailability()
                     publishState(selectedTab = selectedTab, isRefreshing = false)
                 }
 
@@ -89,8 +96,48 @@ class MyPostsViewModel @Inject constructor(
                     publishFailure(
                         selectedTab = selectedTab,
                         isRefreshing = forceRefresh,
-                        message = result.error.message
-                            ?: "Непредвиденная ошибка"
+                        message = result.error.message ?: "Непредвиденная ошибка"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun setPostActive(postId: Long, targetIsActive: Boolean) {
+        if (postId in updatingPostIds) {
+            return
+        }
+
+        val selectedTab = _uiState.value.selectedTab
+        updatingPostIds += postId
+        allPosts = allPosts.applyArchiveActionAvailability()
+        publishState(selectedTab = selectedTab, isRefreshing = false)
+
+        viewModelScope.launch {
+            when (val result = postsInteractor.setPostActive(id = postId, isActive = targetIsActive)) {
+                is Result.Success -> {
+                    allPosts = allPosts.replacePost(
+                        post = myPostsUiMapper.map(result.data)
+                    ).applyArchiveActionAvailability(excluding = postId)
+                    updatingPostIds -= postId
+                    publishState(selectedTab = selectedTab, isRefreshing = false)
+                }
+
+                is Result.Error -> {
+                    updatingPostIds -= postId
+                    allPosts = allPosts.applyArchiveActionAvailability()
+                    publishState(selectedTab = selectedTab, isRefreshing = false)
+                    emitEffect(MyPostsScreenUiEffect.ShowError(result.message))
+                }
+
+                is Result.Exception -> {
+                    updatingPostIds -= postId
+                    allPosts = allPosts.applyArchiveActionAvailability()
+                    publishState(selectedTab = selectedTab, isRefreshing = false)
+                    emitEffect(
+                        MyPostsScreenUiEffect.ShowError(
+                            result.error.message ?: "Непредвиденная ошибка"
+                        )
                     )
                 }
             }
@@ -141,6 +188,22 @@ class MyPostsViewModel @Inject constructor(
     private fun ImmutableList<MyPostUiModel>.filtered(tab: MyPostsTab): ImmutableList<MyPostUiModel> =
         filter { post -> post.isActive == (tab == MyPostsTab.Active) }
             .toImmutableList()
+
+    private fun ImmutableList<MyPostUiModel>.replacePost(post: MyPostUiModel): ImmutableList<MyPostUiModel> =
+        map { current ->
+            if (current.id == post.id) {
+                post
+            } else {
+                current
+            }
+        }.toImmutableList()
+
+    private fun ImmutableList<MyPostUiModel>.applyArchiveActionAvailability(
+        excluding: Long? = null
+    ): ImmutableList<MyPostUiModel> = map { post ->
+        val isUpdating = post.id in updatingPostIds && post.id != excluding
+        post.copy(archiveActionEnabled = !isUpdating)
+    }.toImmutableList()
 
     private fun emitEffect(effect: MyPostsScreenUiEffect) {
         viewModelScope.launch {

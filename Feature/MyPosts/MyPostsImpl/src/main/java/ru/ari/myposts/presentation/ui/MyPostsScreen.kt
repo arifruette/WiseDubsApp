@@ -141,7 +141,17 @@ private fun PostsList(
         items(items = posts, key = MyPostUiModel::id) { post ->
             MyPostCard(
                 post = post,
-                actionHandler = actionHandler
+                onClick = {
+                    actionHandler.onAction(MyPostsScreenAction.ClickPost(post.id))
+                },
+                onArchiveClick = {
+                    actionHandler.onAction(
+                        MyPostsScreenAction.ClickArchiveAction(
+                            postId = post.id,
+                            targetIsActive = post.archiveActionTargetActive
+                        )
+                    )
+                }
             )
         }
     }

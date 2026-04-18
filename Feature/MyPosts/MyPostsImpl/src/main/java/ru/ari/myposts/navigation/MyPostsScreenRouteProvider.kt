@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import ru.ari.composelib.LocalPostLoginNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.composelib.di.utils.rememberScopedComponent
 import ru.ari.di.deps
@@ -45,6 +46,7 @@ private fun MyPostsScreenRoute(
     viewModel: MyPostsViewModel
 ) {
     val context = LocalContext.current
+    val navigator = LocalPostLoginNavigator.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val actionHandler = remember(viewModel) {
         MyPostsActionHandler(viewModel::onAction)
@@ -59,19 +61,11 @@ private fun MyPostsScreenRoute(
                 }
 
                 MyPostsScreenUiEffect.OpenCreatePost -> {
-                    Toast.makeText(
-                        context,
-                        "Экран формы поста пока не подключен",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    navigator.navigate(Route.PostLogin.CreatePostScreenRoute)
                 }
 
                 is MyPostsScreenUiEffect.OpenEditPost -> {
-                    Toast.makeText(
-                        context,
-                        "Экран формы поста пока не подключен, id=${effect.postId}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    navigator.navigate(Route.PostLogin.EditPostScreenRoute(effect.postId))
                 }
             }
         }
