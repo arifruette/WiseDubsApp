@@ -34,6 +34,9 @@ sealed interface Route : NavKey {
         data class EditPostScreenRoute(val postId: Long) : Route
 
         @Serializable
+        data class AddressManageScreenRoute(val locationId: Int? = null) : Route
+
+        @Serializable
         data object ProfileScreenRoute : Route
     }
 

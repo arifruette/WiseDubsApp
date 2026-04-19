@@ -3,7 +3,6 @@ package ru.ari.posts.data.repository
 import javax.inject.Inject
 import ru.ari.network.domain.models.Result
 import ru.ari.posts.api.domain.models.CreatePostParams
-import ru.ari.posts.api.domain.models.GroupedRoom
 import ru.ari.posts.api.domain.models.Post
 import ru.ari.posts.api.domain.models.UpdatePostParams
 import ru.ari.posts.api.domain.repository.PostsRepository
@@ -22,9 +21,6 @@ class MockPostsRepository @Inject constructor(
         mockPostsDataSource.getPostById(id)
             ?.let { post -> Result.Success(post) }
             ?: Result.Error(404, "Пост с id=$id не найден")
-
-    override suspend fun getGroupedRooms(): Result<List<GroupedRoom>> =
-        Result.Success(mockPostsDataSource.getGroupedRooms())
 
     override suspend fun createPost(params: CreatePostParams): Result<Post> =
         Result.Success(mockPostsDataSource.createPost(params))

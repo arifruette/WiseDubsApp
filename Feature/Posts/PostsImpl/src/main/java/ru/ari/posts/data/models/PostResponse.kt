@@ -7,8 +7,8 @@ data class PostResponse(
     val title: String,
     val description: String,
     val exchange: String,
-    val corpus: String,
-    val room: String,
+    @SerializedName("pickup_location")
+    val pickupLocation: PickupLocationResponse,
     @SerializedName("message_id")
     val messageId: String,
     @SerializedName("is_active")

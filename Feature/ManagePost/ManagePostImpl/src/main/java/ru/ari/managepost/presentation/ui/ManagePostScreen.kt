@@ -30,8 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.Apartment
-import androidx.compose.material.icons.outlined.DoorFront
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,6 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
+import java.io.File
 import kotlinx.collections.immutable.ImmutableList
 import ru.ari.designsystem.components.WiseDubsTextField
 import ru.ari.managepost.presentation.contract.ManagePostActionHandler
@@ -65,7 +65,7 @@ import ru.ari.managepost.presentation.models.ManagePostImageUiModel
 import ru.ari.managepost.presentation.models.ManagePostMode
 import ru.ari.managepost.presentation.models.ManagePostRoomsLoadState
 import ru.ari.managepost.presentation.models.ManagePostSelectorSheet
-import java.io.File
+import ru.ari.posts.api.domain.models.PickupLocation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,12 +75,18 @@ fun ManagePostScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (uiState.isLoading) {
+        LoadingScreen(modifier = modifier)
+        return
+    }
+
     val context = LocalContext.current
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.toString()?.let { actionHandler.onAction(ManagePostScreenAction.AddImage(it)) }
     }
+    val isFormEnabled = !uiState.isSaving
 
     Scaffold(
         modifier = modifier,
@@ -105,18 +111,6 @@ fun ManagePostScreen(
             )
         }
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,6 +121,7 @@ fun ManagePostScreen(
         ) {
             ImageSection(
                 images = uiState.form.images,
+                enabled = isFormEnabled,
                 onAddClick = {
                     imagePicker.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -149,6 +144,7 @@ fun ManagePostScreen(
                     value = uiState.form.title,
                     onValueChanged = { actionHandler.onAction(ManagePostScreenAction.ChangeTitle(it)) },
                     labelText = "Заголовок",
+                    enabled = isFormEnabled,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -158,29 +154,29 @@ fun ManagePostScreen(
                         actionHandler.onAction(ManagePostScreenAction.ChangeDescription(it))
                     },
                     labelText = "Описание",
+                    enabled = isFormEnabled,
                     maxLines = 4,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp)
+                        .height(140.dp)
                 )
 
                 WiseDubsTextField(
                     value = uiState.form.exchange,
                     onValueChanged = { actionHandler.onAction(ManagePostScreenAction.ChangeExchange(it)) },
                     labelText = "Обмен",
+                    enabled = isFormEnabled,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                RoomSelectorSection(
+                AddressSelectorSection(
                     uiState = uiState,
-                    onCorpusClick = {
-                        actionHandler.onAction(ManagePostScreenAction.OpenCorpusSelector)
-                    },
-                    onRoomClick = {
-                        actionHandler.onAction(ManagePostScreenAction.OpenRoomSelector)
+                    enabled = isFormEnabled,
+                    onAddressClick = {
+                        actionHandler.onAction(ManagePostScreenAction.OpenAddressSelector)
                     },
                     onRetryClick = {
-                        actionHandler.onAction(ManagePostScreenAction.RetryLoadRooms)
+                        actionHandler.onAction(ManagePostScreenAction.RetryLoadLocations)
                     }
                 )
 
@@ -238,40 +234,23 @@ fun ManagePostScreen(
 
         when (uiState.activeSelectorSheet) {
             ManagePostSelectorSheet.None -> Unit
-            ManagePostSelectorSheet.Corpus -> {
+            ManagePostSelectorSheet.Address -> {
                 ModalBottomSheet(
                     onDismissRequest = {
                         actionHandler.onAction(ManagePostScreenAction.DismissSelector)
                     }
                 ) {
-                    SelectorSheetContent(
-                        title = "Выберите корпус",
-                        subtitle = "Сначала выберите корпус, затем комнату.",
-                        items = uiState.availableCorpora,
-                        selectedValue = uiState.form.selectedCorpus,
+                    AddressSheetContent(
+                        locations = uiState.pickupLocations,
+                        selectedId = uiState.form.selectedAddress?.id,
                         onSelect = {
-                            actionHandler.onAction(ManagePostScreenAction.SelectCorpus(it))
-                        }
-                    )
-                }
-            }
-
-            ManagePostSelectorSheet.Room -> {
-                ModalBottomSheet(
-                    onDismissRequest = {
-                        actionHandler.onAction(ManagePostScreenAction.DismissSelector)
-                    }
-                ) {
-                    RoomSheetContent(
-                        corpus = uiState.form.selectedCorpus,
-                        query = uiState.roomSearchQuery,
-                        rooms = uiState.filteredAvailableRooms,
-                        selectedRoom = uiState.form.selectedRoom,
-                        onQueryChange = {
-                            actionHandler.onAction(ManagePostScreenAction.ChangeRoomSearchQuery(it))
+                            actionHandler.onAction(ManagePostScreenAction.SelectAddress(it))
                         },
-                        onSelect = {
-                            actionHandler.onAction(ManagePostScreenAction.SelectRoom(it))
+                        onEdit = {
+                            actionHandler.onAction(ManagePostScreenAction.EditAddress(it))
+                        },
+                        onCreate = {
+                            actionHandler.onAction(ManagePostScreenAction.CreateAddress)
                         }
                     )
                 }
@@ -281,10 +260,22 @@ fun ManagePostScreen(
 }
 
 @Composable
-private fun RoomSelectorSection(
+private fun LoadingScreen(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun AddressSelectorSection(
     uiState: ManagePostScreenUiState,
-    onCorpusClick: () -> Unit,
-    onRoomClick: () -> Unit,
+    enabled: Boolean,
+    onAddressClick: () -> Unit,
     onRetryClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -298,11 +289,11 @@ private fun RoomSelectorSection(
             fontWeight = FontWeight.SemiBold
         )
 
-        when (val roomsState = uiState.roomsLoadState) {
+        when (val locationsState = uiState.locationsLoadState) {
             ManagePostRoomsLoadState.Loading -> {
                 SelectorStatusCard(
-                    title = "Загружаем корпуса и комнаты",
-                    subtitle = "Список нужен для точного выбора места.",
+                    title = "Загружаем адреса",
+                    subtitle = "Список нужен для выбора места.",
                     action = {
                         CircularProgressIndicator(
                             modifier = Modifier.height(20.dp),
@@ -315,7 +306,7 @@ private fun RoomSelectorSection(
             is ManagePostRoomsLoadState.Error -> {
                 SelectorStatusCard(
                     title = "Не удалось загрузить список",
-                    subtitle = roomsState.message,
+                    subtitle = locationsState.message,
                     action = {
                         TextButton(onClick = onRetryClick) {
                             Icon(
@@ -330,37 +321,10 @@ private fun RoomSelectorSection(
 
             ManagePostRoomsLoadState.Content -> {
                 SelectionField(
-                    label = "Корпус",
-                    value = uiState.form.selectedCorpus,
-                    placeholder = "Выбрать корпус",
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Apartment,
-                            contentDescription = null
-                        )
-                    },
-                    onClick = onCorpusClick
-                )
-
-                SelectionField(
-                    label = "Комната",
-                    value = uiState.form.selectedRoom,
-                    placeholder = if (uiState.form.selectedCorpus.isBlank()) {
-                        "Сначала выберите корпус"
-                    } else {
-                        "Выбрать комнату"
-                    },
-                    enabled = uiState.form.selectedCorpus.isNotBlank(),
-                    supportingText = uiState.form.selectedCorpus.takeIf { it.isNotBlank() }?.let {
-                        "Корпус $it"
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.DoorFront,
-                            contentDescription = null
-                        )
-                    },
-                    onClick = onRoomClick
+                    value = uiState.form.selectedAddress?.displayTitle().orEmpty(),
+                    placeholder = "Выбрать адрес",
+                    enabled = enabled,
+                    onClick = onAddressClick
                 )
             }
         }
@@ -369,13 +333,11 @@ private fun RoomSelectorSection(
 
 @Composable
 private fun SelectionField(
-    label: String,
     value: String,
     placeholder: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     supportingText: String? = null,
-    icon: @Composable () -> Unit,
     onClick: () -> Unit
 ) {
     val borderColor = if (enabled) {
@@ -404,24 +366,10 @@ private fun SelectionField(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(12.dp)
-            ) {
-                icon()
-            }
-
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
                 Text(
                     text = value.ifBlank { placeholder },
                     style = MaterialTheme.typography.bodyLarge,
@@ -430,7 +378,9 @@ private fun SelectionField(
                     } else {
                         MaterialTheme.colorScheme.onSurface
                     },
-                    fontWeight = if (value.isBlank()) FontWeight.Normal else FontWeight.Medium
+                    fontWeight = if (value.isBlank()) FontWeight.Normal else FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 supportingText?.let {
                     Text(
@@ -494,12 +444,12 @@ private fun SelectorStatusCard(
 }
 
 @Composable
-private fun SelectorSheetContent(
-    title: String,
-    subtitle: String,
-    items: ImmutableList<String>,
-    selectedValue: String,
-    onSelect: (String) -> Unit,
+private fun AddressSheetContent(
+    locations: ImmutableList<PickupLocation>,
+    selectedId: Int?,
+    onSelect: (PickupLocation) -> Unit,
+    onEdit: (Int) -> Unit,
+    onCreate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -509,106 +459,47 @@ private fun SelectorSheetContent(
             .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(items, key = { it }) { item ->
-                SelectorListItem(
-                    label = item,
-                    selected = item == selectedValue,
-                    onClick = { onSelect(item) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RoomSheetContent(
-    corpus: String,
-    query: String,
-    rooms: ImmutableList<String>,
-    selectedRoom: String,
-    onQueryChange: (String) -> Unit,
-    onSelect: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .padding(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text = "Выберите комнату",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "Корпус $corpus",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        WiseDubsTextField(
-            value = query,
-            onValueChanged = onQueryChange,
-            labelText = "Поиск по комнате",
-            modifier = Modifier.fillMaxWidth()
+        Text(
+            text = "Выберите адрес",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold
         )
 
-        if (rooms.isEmpty()) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-            ) {
-                Text(
-                    text = "По вашему запросу ничего не найдено.",
-                    modifier = Modifier.padding(18.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(locations, key = { it.id }) { location ->
+                AddressListItem(
+                    location = location,
+                    selected = location.id == selectedId,
+                    onSelect = { onSelect(location) },
+                    onEdit = { onEdit(location.id) }
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(rooms, key = { it }) { room ->
-                    SelectorListItem(
-                        label = room,
-                        selected = room == selectedRoom,
-                        onClick = { onSelect(room) }
-                    )
-                }
-            }
+        }
+
+        Button(
+            onClick = onCreate,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Добавить новый адрес",
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+            )
         }
     }
 }
 
 @Composable
-private fun SelectorListItem(
-    label: String,
+private fun AddressListItem(
+    location: PickupLocation,
     selected: Boolean,
-    onClick: () -> Unit,
+    onSelect: () -> Unit,
+    onEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val background = if (selected) {
@@ -616,26 +507,56 @@ private fun SelectorListItem(
     } else {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     }
+    val secondaryText = location.displaySecondaryText()
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick),
+            .clickable(onClick = onSelect),
         color = background
     ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = location.displayTitle(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                )
+                if (secondaryText.isNotBlank()) {
+                    Text(
+                        text = secondaryText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            IconButton(onClick = onEdit) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Редактировать"
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun ImageSection(
     images: ImmutableList<ManagePostImageUiModel>,
+    enabled: Boolean,
     onAddClick: () -> Unit,
     onRemoveClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -661,6 +582,7 @@ private fun ImageSection(
                 )
                 IconButton(
                     onClick = { onRemoveClick(image.key) },
+                    enabled = enabled,
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Icon(
@@ -678,7 +600,7 @@ private fun ImageSection(
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .clickable(onClick = onAddClick),
+                    .clickable(enabled = enabled, onClick = onAddClick),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -699,7 +621,7 @@ private fun ImageSection(
 }
 
 private fun String.toFileOrNull(context: Context): File? {
-    val uri = runCatching { this.toUri() }.getOrNull() ?: return null
+    val uri = runCatching { toUri() }.getOrNull() ?: return null
     val inputStream = context.contentResolver.openInputStream(uri) ?: return null
     val tempFile = File.createTempFile("manage_post_local_", ".jpg", context.cacheDir)
 

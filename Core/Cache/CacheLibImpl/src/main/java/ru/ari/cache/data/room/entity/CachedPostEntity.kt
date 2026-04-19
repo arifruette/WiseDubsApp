@@ -11,8 +11,19 @@ data class CachedPostEntity(
     val scope: String,
     val title: String,
     val description: String,
-    val corpus: String,
-    val room: String,
+    
+    // Pickup Location fields
+    val locationId: Int,
+    val locationUserId: Int,
+    val locationCorpus: String?,
+    val locationEntrance: String?,
+    val locationFloor: String?,
+    val locationRoom: String,
+    val locationComment: String?,
+    val locationDisplayText: String?,
+    val locationCreatedAt: String,
+    val locationUpdatedAt: String,
+
     val isActive: Boolean,
     val isReserved: Boolean,
     val exchange: String,

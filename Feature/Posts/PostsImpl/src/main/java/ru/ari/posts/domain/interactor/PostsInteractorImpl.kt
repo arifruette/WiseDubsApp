@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.ari.network.domain.models.Result
 import ru.ari.posts.api.domain.models.CreatePostParams
-import ru.ari.posts.api.domain.models.GroupedRoom
 import ru.ari.posts.api.domain.interactor.PostsInteractor
 import ru.ari.posts.api.domain.models.Post
 import ru.ari.posts.api.domain.models.UpdatePostParams
@@ -28,11 +27,6 @@ class PostsInteractorImpl @Inject constructor(
     override suspend fun getPostById(id: Long): Result<Post> =
         withContext(Dispatchers.IO) {
             postsRepository.getPostById(id)
-        }
-
-    override suspend fun getGroupedRooms(): Result<List<GroupedRoom>> =
-        withContext(Dispatchers.IO) {
-            postsRepository.getGroupedRooms()
         }
 
     override suspend fun createPost(params: CreatePostParams): Result<Post> =

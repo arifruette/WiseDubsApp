@@ -41,6 +41,10 @@ dependencies {
     implementation(projects.diCoreLib)
     implementation(projects.composeCoreLib)
     implementation(projects.designSystemCoreLib)
+    implementation(projects.networkLibApi)
+
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

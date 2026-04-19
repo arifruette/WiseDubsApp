@@ -10,4 +10,7 @@ sealed interface ManagePostScreenUiEffect {
 
     @Immutable
     data object Completed : ManagePostScreenUiEffect
+
+    @Immutable
+    data class NavigateToAddressManage(val locationId: Int? = null) : ManagePostScreenUiEffect
 }

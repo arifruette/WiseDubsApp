@@ -5,6 +5,7 @@ import ru.ari.cache.data.room.entity.CachedPostEntity
 import ru.ari.cache.data.room.entity.CachedPostImageEntity
 import ru.ari.cache.data.room.models.CachedPostWithImages
 import ru.ari.cache.domain.PostDataSource
+import ru.ari.cache.domain.models.CachedPickupLocation
 import ru.ari.cache.domain.models.CachedPost
 import ru.ari.cache.domain.models.CachedPostImage
 import ru.ari.cache.domain.models.PostCacheScope
@@ -39,8 +40,16 @@ private fun CachedPost.toEntity(scope: PostCacheScope): CachedPostEntity = Cache
     scope = scope.name,
     title = title,
     description = description,
-    corpus = corpus,
-    room = room,
+    locationId = pickupLocation.id,
+    locationUserId = pickupLocation.userId,
+    locationCorpus = pickupLocation.corpus,
+    locationEntrance = pickupLocation.entrance,
+    locationFloor = pickupLocation.floor,
+    locationRoom = pickupLocation.room,
+    locationComment = pickupLocation.comment,
+    locationDisplayText = pickupLocation.displayText,
+    locationCreatedAt = pickupLocation.createdAt,
+    locationUpdatedAt = pickupLocation.updatedAt,
     isActive = isActive,
     isReserved = isReserved,
     exchange = exchange,
@@ -62,8 +71,18 @@ private fun CachedPostWithImages.toDomain(): CachedPost = CachedPost(
     id = post.postId,
     title = post.title,
     description = post.description,
-    corpus = post.corpus,
-    room = post.room,
+    pickupLocation = CachedPickupLocation(
+        id = post.locationId,
+        userId = post.locationUserId,
+        corpus = post.locationCorpus,
+        entrance = post.locationEntrance,
+        floor = post.locationFloor,
+        room = post.locationRoom,
+        comment = post.locationComment,
+        displayText = post.locationDisplayText,
+        createdAt = post.locationCreatedAt,
+        updatedAt = post.locationUpdatedAt
+    ),
     isActive = post.isActive,
     isReserved = post.isReserved,
     exchange = post.exchange,

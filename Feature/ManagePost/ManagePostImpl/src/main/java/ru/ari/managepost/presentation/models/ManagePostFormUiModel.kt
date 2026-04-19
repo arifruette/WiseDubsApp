@@ -4,13 +4,14 @@ import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+import ru.ari.posts.api.domain.models.PickupLocation
+
 @Immutable
 data class ManagePostFormUiModel(
     val title: String = "",
     val description: String = "",
     val exchange: String = "",
-    val selectedCorpus: String = "",
-    val selectedRoom: String = "",
+    val selectedAddress: PickupLocation? = null,
     val reservedBy: String = "",
     val messageId: String = "",
     val images: ImmutableList<ManagePostImageUiModel> = persistentListOf(),

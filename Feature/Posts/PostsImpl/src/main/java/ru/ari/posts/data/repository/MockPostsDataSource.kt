@@ -5,17 +5,17 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.toColorInt
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import ru.ari.posts.api.domain.models.CreatePostParams
-import ru.ari.posts.api.domain.models.GroupedRoom
+import ru.ari.posts.api.domain.models.MockPickupLocationStore
+import ru.ari.posts.api.domain.models.PickupLocation
 import ru.ari.posts.api.domain.models.Post
 import ru.ari.posts.api.domain.models.PostImage
-import ru.ari.posts.api.domain.models.Room
 import ru.ari.posts.api.domain.models.UpdatePostParams
-import androidx.core.graphics.toColorInt
-import androidx.core.graphics.createBitmap
 
 @Singleton
 class MockPostsDataSource @Inject constructor(
@@ -31,27 +31,6 @@ class MockPostsDataSource @Inject constructor(
     fun getMyPosts(): List<Post> = myPosts.toList()
 
     fun getPostById(id: Long): Post? = (sharingPosts + myPosts).firstOrNull { it.id == id }
-
-    fun getGroupedRooms(): List<GroupedRoom> =
-        myPosts.plus(sharingPosts)
-            .groupBy(Post::corpus)
-            .map { (corpus, posts) ->
-                GroupedRoom(
-                    corpus = corpus,
-                    rooms = posts
-                        .map(Post::room)
-                        .distinct()
-                        .sorted()
-                        .mapIndexed { index, roomName ->
-                            Room(
-                                id = index.toLong() + 1,
-                                roomName = roomName,
-                                corpus = corpus
-                            )
-                        }
-                )
-            }
-            .sortedBy(GroupedRoom::corpus)
 
     fun setPostActive(id: Long, isActive: Boolean): Post? {
         val index = myPosts.indexOfFirst { it.id == id }
@@ -71,8 +50,7 @@ class MockPostsDataSource @Inject constructor(
             title = params.title,
             description = params.description.orEmpty(),
             exchange = params.exchange.orEmpty(),
-            corpus = params.corpus,
-            room = params.room,
+            pickupLocation = requirePickupLocation(params.pickupLocationId),
             messageId = params.messageId,
             isActive = true,
             isReserved = false,
@@ -96,8 +74,7 @@ class MockPostsDataSource @Inject constructor(
             title = params.title,
             description = params.description.orEmpty(),
             exchange = params.exchange.orEmpty(),
-            corpus = params.corpus,
-            room = params.room,
+            pickupLocation = params.pickupLocationId?.let(::requirePickupLocation) ?: current.pickupLocation,
             messageId = params.messageId,
             reservedBy = params.reservedBy,
             images = params.imageFiles?.let { imageFiles ->
@@ -106,6 +83,11 @@ class MockPostsDataSource @Inject constructor(
         )
         myPosts[index] = updated
         return updated
+    }
+
+    private fun requirePickupLocation(id: Int): PickupLocation {
+        return MockPickupLocationStore.getById(id)
+            ?: error("Pickup location with id=$id is missing in mock store")
     }
 
     private fun storeUploadedImages(postId: Long, imageFiles: List<File>): List<PostImage> {
@@ -183,14 +165,26 @@ class MockPostsDataSource @Inject constructor(
         bitmap.recycle()
     }
 
+    private val defaultPickupLocation = PickupLocation(
+        id = 1,
+        userId = 1,
+        corpus = "ГУК А",
+        entrance = null,
+        floor = null,
+        room = "314",
+        comment = null,
+        displayText = "Главный корпус",
+        createdAt = "2026-04-09T10:00:00",
+        updatedAt = "2026-04-09T10:00:00"
+    )
+
     private val sharingPosts = mutableListOf(
         Post(
             id = 101L,
             title = "Ноутбук Lenovo ThinkPad T480",
             description = "Рабочий ноутбук для учебы, заряд держит около 4 часов, отдам с оригинальной зарядкой.",
             exchange = "Электроника",
-            corpus = "ГУК А",
-            room = "314",
+            pickupLocation = defaultPickupLocation.copy(id = 101, corpus = "ГУК А", room = "314"),
             messageId = "sharing-101",
             isActive = true,
             isReserved = false,
@@ -211,8 +205,7 @@ class MockPostsDataSource @Inject constructor(
             title = "Графический калькулятор Casio FX-9860GIII",
             description = "Почти новый калькулятор, подходит для инженерных задач и контрольных по матану.",
             exchange = "Учеба",
-            corpus = "ГУК Б",
-            room = "208",
+            pickupLocation = defaultPickupLocation.copy(id = 102, corpus = "ГУК Б", room = "208"),
             messageId = "sharing-102",
             isActive = true,
             isReserved = true,
@@ -233,8 +226,7 @@ class MockPostsDataSource @Inject constructor(
             title = "Складной самокат Oxelo Town 7",
             description = "Самокат в хорошем состоянии, удобен для дороги от метро до корпуса.",
             exchange = "Транспорт",
-            corpus = "ГУК В",
-            room = "119",
+            pickupLocation = defaultPickupLocation.copy(id = 103, corpus = "ГУК В", room = "119"),
             messageId = "sharing-103",
             isActive = true,
             isReserved = false,
@@ -258,8 +250,7 @@ class MockPostsDataSource @Inject constructor(
             title = "iPad 9th Gen 64GB",
             description = "Планшет с чехлом и стилусом, без трещин, подходит для конспектов и чтения PDF.",
             exchange = "Электроника",
-            corpus = "ГУК А",
-            room = "402",
+            pickupLocation = defaultPickupLocation.copy(id = 201, corpus = "ГУК А", room = "402"),
             messageId = "my-201",
             isActive = true,
             isReserved = false,
@@ -280,8 +271,7 @@ class MockPostsDataSource @Inject constructor(
             title = "Наушники Sony WH-1000XM4",
             description = "Полноразмерные Bluetooth-наушники, шумодав работает, в комплекте кабель и кейс.",
             exchange = "Аксессуары",
-            corpus = "ГУК Б",
-            room = "126",
+            pickupLocation = defaultPickupLocation.copy(id = 202, corpus = "ГУК Б", room = "126"),
             messageId = "my-202",
             isActive = true,
             isReserved = true,
@@ -302,8 +292,7 @@ class MockPostsDataSource @Inject constructor(
             title = "Учебник Campbell Biology, 12th Edition",
             description = "Толстый англоязычный учебник по биологии, есть пометки карандашом на нескольких страницах.",
             exchange = "Книги",
-            corpus = "ГУК Г",
-            room = "221",
+            pickupLocation = defaultPickupLocation.copy(id = 203, corpus = "ГУК Г", room = "221"),
             messageId = "my-203",
             isActive = false,
             isReserved = false,
@@ -324,8 +313,7 @@ class MockPostsDataSource @Inject constructor(
             title = "Рюкзак Herschel Little America",
             description = "Вместительный городской рюкзак, состояние хорошее, использовался один семестр.",
             exchange = "Одежда и аксессуары",
-            corpus = "ГУК Д",
-            room = "017",
+            pickupLocation = defaultPickupLocation.copy(id = 204, corpus = "ГУК Д", room = "017"),
             messageId = "my-204",
             isActive = false,
             isReserved = false,

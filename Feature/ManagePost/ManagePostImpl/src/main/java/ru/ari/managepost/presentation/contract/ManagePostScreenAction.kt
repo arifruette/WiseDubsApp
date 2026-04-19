@@ -2,6 +2,7 @@ package ru.ari.managepost.presentation.contract
 
 import androidx.compose.runtime.Immutable
 import java.io.File
+import ru.ari.posts.api.domain.models.PickupLocation
 import ru.ari.managepost.presentation.models.ManagePostImageUiModel
 import ru.ari.managepost.presentation.models.ManagePostMode
 
@@ -21,25 +22,22 @@ sealed interface ManagePostScreenAction {
     data class ChangeExchange(val value: String) : ManagePostScreenAction
 
     @Immutable
-    data object RetryLoadRooms : ManagePostScreenAction
+    data object RetryLoadLocations : ManagePostScreenAction
 
     @Immutable
-    data object OpenCorpusSelector : ManagePostScreenAction
-
-    @Immutable
-    data object OpenRoomSelector : ManagePostScreenAction
+    data object OpenAddressSelector : ManagePostScreenAction
 
     @Immutable
     data object DismissSelector : ManagePostScreenAction
 
     @Immutable
-    data class ChangeRoomSearchQuery(val value: String) : ManagePostScreenAction
+    data class SelectAddress(val address: PickupLocation) : ManagePostScreenAction
 
     @Immutable
-    data class SelectCorpus(val corpus: String) : ManagePostScreenAction
+    data class EditAddress(val id: Int) : ManagePostScreenAction
 
     @Immutable
-    data class SelectRoom(val room: String) : ManagePostScreenAction
+    data object CreateAddress : ManagePostScreenAction
 
     @Immutable
     data class AddImage(val uriString: String) : ManagePostScreenAction

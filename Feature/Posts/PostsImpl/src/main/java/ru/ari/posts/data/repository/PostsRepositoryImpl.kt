@@ -12,7 +12,6 @@ import ru.ari.cache.domain.models.PostCacheScope
 import ru.ari.network.di.AuthRetrofit
 import ru.ari.network.domain.models.Result
 import ru.ari.posts.api.domain.models.CreatePostParams
-import ru.ari.posts.api.domain.models.GroupedRoom
 import ru.ari.posts.api.domain.models.Post
 import ru.ari.posts.api.domain.models.UpdatePostParams
 import ru.ari.posts.api.domain.repository.PostsRepository
@@ -68,23 +67,13 @@ class PostsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getGroupedRooms(): Result<List<GroupedRoom>> =
-        try {
-            Result.Success(postsRemoteApi.getGroupedRooms().map { it.toDomain() })
-        } catch (e: HttpException) {
-            Result.Error(e.code(), e.message())
-        } catch (e: Throwable) {
-            Result.Exception(e)
-        }
-
     override suspend fun createPost(params: CreatePostParams): Result<Post> =
         try {
             val baseUrl = authRetrofit.baseUrl().toString()
             val createdPost = postsRemoteApi.createPost(
                 title = params.title.toPart(),
                 description = params.description.toNullablePart(),
-                corpus = params.corpus.toPart(),
-                room = params.room.toPart(),
+                pickupLocationId = params.pickupLocationId.toString().toPart(),
                 exchange = params.exchange.toNullablePart(),
                 messageId = params.messageId.toPart(),
                 reservedBy = params.reservedBy.toPart(),
@@ -106,8 +95,7 @@ class PostsRepositoryImpl @Inject constructor(
                 id = params.postId,
                 title = params.title.toPart(),
                 description = params.description.toNullablePart(),
-                corpus = params.corpus.toPart(),
-                room = params.room.toPart(),
+                pickupLocationId = params.pickupLocationId?.toString()?.toPart(),
                 exchange = params.exchange.toNullablePart(),
                 messageId = params.messageId.toPart(),
                 reservedBy = params.reservedBy.toPart(),

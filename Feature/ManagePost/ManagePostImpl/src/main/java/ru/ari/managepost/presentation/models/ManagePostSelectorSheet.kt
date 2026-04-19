@@ -9,8 +9,5 @@ sealed interface ManagePostSelectorSheet {
     data object None : ManagePostSelectorSheet
 
     @Immutable
-    data object Corpus : ManagePostSelectorSheet
-
-    @Immutable
-    data object Room : ManagePostSelectorSheet
+    data object Address : ManagePostSelectorSheet
 }
