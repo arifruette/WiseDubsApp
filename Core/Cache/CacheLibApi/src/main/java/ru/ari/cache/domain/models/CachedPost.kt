@@ -8,7 +8,7 @@ data class CachedPickupLocation(
     val floor: String?,
     val room: String,
     val comment: String?,
-    val displayText: String?,
+    val label: String?,
     val createdAt: String,
     val updatedAt: String
 )

@@ -39,7 +39,7 @@ class PickupLocationRepositoryImpl @Inject constructor(
             floor = params.floor,
             room = params.room,
             comment = params.comment,
-            displayText = params.displayText
+            label = params.label
         )
         Result.Success(api.createPickupLocation(request).toDomain())
     } catch (e: HttpException) {
@@ -56,7 +56,7 @@ class PickupLocationRepositoryImpl @Inject constructor(
                 floor = params.floor,
                 room = params.room,
                 comment = params.comment,
-                displayText = params.displayText
+                label = params.label
             )
             Result.Success(api.updatePickupLocation(id, request).toDomain())
         } catch (e: HttpException) {

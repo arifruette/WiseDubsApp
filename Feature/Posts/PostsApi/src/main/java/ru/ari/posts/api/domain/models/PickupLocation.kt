@@ -8,7 +8,7 @@ data class PickupLocation(
     val floor: String?,
     val room: String,
     val comment: String?,
-    val displayText: String?,
+    val label: String?,
     val createdAt: String,
     val updatedAt: String
 )
@@ -19,7 +19,7 @@ data class CreatePickupLocationParams(
     val floor: String?,
     val room: String,
     val comment: String?,
-    val displayText: String?
+    val label: String?
 )
 
 data class UpdatePickupLocationParams(
@@ -28,5 +28,5 @@ data class UpdatePickupLocationParams(
     val floor: String?,
     val room: String?,
     val comment: String?,
-    val displayText: String?
+    val label: String?
 )

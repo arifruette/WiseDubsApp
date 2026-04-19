@@ -47,7 +47,7 @@ private fun CachedPost.toEntity(scope: PostCacheScope): CachedPostEntity = Cache
     locationFloor = pickupLocation.floor,
     locationRoom = pickupLocation.room,
     locationComment = pickupLocation.comment,
-    locationDisplayText = pickupLocation.displayText,
+    locationDisplayText = pickupLocation.label,
     locationCreatedAt = pickupLocation.createdAt,
     locationUpdatedAt = pickupLocation.updatedAt,
     isActive = isActive,
@@ -79,7 +79,7 @@ private fun CachedPostWithImages.toDomain(): CachedPost = CachedPost(
         floor = post.locationFloor,
         room = post.locationRoom,
         comment = post.locationComment,
-        displayText = post.locationDisplayText,
+        label = post.locationDisplayText,
         createdAt = post.locationCreatedAt,
         updatedAt = post.locationUpdatedAt
     ),

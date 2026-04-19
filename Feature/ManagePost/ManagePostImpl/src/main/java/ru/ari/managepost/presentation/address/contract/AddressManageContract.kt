@@ -12,7 +12,7 @@ data class AddressManageState(
     val floor: String = "",
     val room: String = "",
     val comment: String = "",
-    val displayText: String = "",
+    val label: String = "",
     val isRoomError: Boolean = false,
     val error: String? = null
 )
@@ -24,7 +24,7 @@ sealed interface AddressManageAction {
     data class ChangeFloor(val value: String) : AddressManageAction
     data class ChangeRoom(val value: String) : AddressManageAction
     data class ChangeComment(val value: String) : AddressManageAction
-    data class ChangeDisplayText(val value: String) : AddressManageAction
+    data class ChangeLabel(val value: String) : AddressManageAction
     data object Save : AddressManageAction
     data object Delete : AddressManageAction
 }

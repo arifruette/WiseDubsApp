@@ -35,8 +35,7 @@ class MockPickupLocationRepository @Inject constructor() : PickupLocationReposit
                 floor = params.floor,
                 room = params.room,
                 comment = params.comment,
-                displayText = params.displayText?.takeIf(String::isNotBlank)
-                    ?: buildDisplayText(params.corpus, params.entrance, params.floor, params.room),
+                label = params.label?.takeIf(String::isNotBlank),
                 createdAt = "2023-10-25T15:00:00Z",
                 updatedAt = "2023-10-25T15:00:00Z"
             )
@@ -53,8 +52,7 @@ class MockPickupLocationRepository @Inject constructor() : PickupLocationReposit
                 floor = params.floor,
                 room = room,
                 comment = params.comment,
-                displayText = params.displayText?.takeIf(String::isNotBlank)
-                    ?: buildDisplayText(params.corpus, params.entrance, params.floor, room),
+                label = params.label?.takeIf(String::isNotBlank),
                 updatedAt = "2023-10-25T16:00:00Z"
             )
         } ?: return Result.Error(404, "Location not found")
@@ -65,14 +63,5 @@ class MockPickupLocationRepository @Inject constructor() : PickupLocationReposit
     override suspend fun deletePickupLocation(id: Int): Result<Unit> {
         MockPickupLocationStore.delete(id)
         return Result.Success(Unit)
-    }
-
-    private fun buildDisplayText(corpus: String?, entrance: String?, floor: String?, room: String): String {
-        return listOfNotNull(
-            corpus?.let { "Корпус $it" },
-            entrance?.let { "Подъезд $it" },
-            floor?.let { "Этаж $it" },
-            "Комната $room"
-        ).joinToString(", ")
     }
 }

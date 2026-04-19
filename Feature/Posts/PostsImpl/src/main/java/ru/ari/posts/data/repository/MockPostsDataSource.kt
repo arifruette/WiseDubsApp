@@ -173,7 +173,7 @@ class MockPostsDataSource @Inject constructor(
         floor = null,
         room = "314",
         comment = null,
-        displayText = "Главный корпус",
+        label = "Главный корпус",
         createdAt = "2026-04-09T10:00:00",
         updatedAt = "2026-04-09T10:00:00"
     )

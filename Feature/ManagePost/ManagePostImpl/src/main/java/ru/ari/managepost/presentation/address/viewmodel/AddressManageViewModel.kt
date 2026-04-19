@@ -58,8 +58,8 @@ class AddressManageViewModel @Inject constructor(
             }
 
             is AddressManageAction.ChangeComment -> _state.update { it.copy(comment = action.value.take(250)) }
-            is AddressManageAction.ChangeDisplayText -> _state.update {
-                it.copy(displayText = action.value.take(250))
+            is AddressManageAction.ChangeLabel -> _state.update {
+                it.copy(label = action.value.take(250))
             }
 
             AddressManageAction.Save -> save()
@@ -87,7 +87,7 @@ class AddressManageViewModel @Inject constructor(
                             floor = location.floor.orEmpty(),
                             room = location.room,
                             comment = location.comment.orEmpty(),
-                            displayText = location.displayText.orEmpty()
+                            label = location.label.orEmpty()
                         )
                     }
                 }
@@ -115,7 +115,7 @@ class AddressManageViewModel @Inject constructor(
                         floor = currentState.floor.ifBlank { null },
                         room = currentState.room,
                         comment = currentState.comment.ifBlank { null },
-                        displayText = currentState.displayText.ifBlank { null }
+                        label = currentState.label.ifBlank { null }
                     )
                 )
             } else {
@@ -127,7 +127,7 @@ class AddressManageViewModel @Inject constructor(
                         floor = currentState.floor.ifBlank { null },
                         room = currentState.room,
                         comment = currentState.comment.ifBlank { null },
-                        displayText = currentState.displayText.ifBlank { null }
+                        label = currentState.label.ifBlank { null }
                     )
                 )
             }

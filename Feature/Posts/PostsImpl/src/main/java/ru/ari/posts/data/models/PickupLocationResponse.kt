@@ -10,7 +10,7 @@ data class PickupLocationResponse(
     @SerializedName("floor") val floor: String? = null,
     @SerializedName("room") val room: String,
     @SerializedName("comment") val comment: String? = null,
-    @SerializedName("display_text") val displayText: String? = null,
+    @SerializedName("label") val label: String? = null,
     @SerializedName("created_at") val createdAt: String,
     @SerializedName("updated_at") val updatedAt: String
 )

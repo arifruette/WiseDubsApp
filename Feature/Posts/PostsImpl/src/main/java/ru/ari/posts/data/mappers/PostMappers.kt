@@ -33,7 +33,7 @@ fun PickupLocationResponse.toDomain(): PickupLocation = PickupLocation(
     floor = floor,
     room = room,
     comment = comment,
-    displayText = displayText,
+    label = label,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -66,7 +66,7 @@ private fun PickupLocation.toCacheModel(): CachedPickupLocation = CachedPickupLo
     floor = floor,
     room = room,
     comment = comment,
-    displayText = displayText,
+    label = label,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -94,7 +94,7 @@ private fun CachedPickupLocation.toDomain(): PickupLocation = PickupLocation(
     floor = floor,
     room = room,
     comment = comment,
-    displayText = displayText,
+    label = label,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

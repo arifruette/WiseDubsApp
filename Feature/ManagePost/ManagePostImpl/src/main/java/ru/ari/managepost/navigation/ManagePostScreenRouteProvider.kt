@@ -99,7 +99,7 @@ private fun ManagePostNavigationRoute(
     val navigator = LocalPostLoginNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    remember(mode, viewModel) {
+    LaunchedEffect(mode, viewModel) {
         viewModel.prepareForMode(mode)
     }
 
@@ -150,7 +150,7 @@ private fun AddressManageNavigationRoute(
     val context = LocalContext.current
     val navigator = LocalPostLoginNavigator.current
 
-    remember(locationId, viewModel) {
+    LaunchedEffect(locationId, viewModel) {
         viewModel.prepareForRoute(locationId)
     }
 

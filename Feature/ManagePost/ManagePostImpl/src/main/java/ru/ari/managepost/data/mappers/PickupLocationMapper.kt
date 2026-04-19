@@ -11,7 +11,7 @@ fun PickupLocationResponse.toDomain(): PickupLocation = PickupLocation(
     floor = floor,
     room = room,
     comment = comment,
-    displayText = displayText,
+    label = label,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

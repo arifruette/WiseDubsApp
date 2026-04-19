@@ -137,8 +137,8 @@ fun AddressManageScreen(
             )
 
             WiseDubsStableTextField(
-                value = state.displayText,
-                onValueChanged = { actionHandler.onAction(AddressManageAction.ChangeDisplayText(it)) },
+                value = state.label,
+                onValueChanged = { actionHandler.onAction(AddressManageAction.ChangeLabel(it)) },
                 labelText = "Название",
                 enabled = isFormEnabled,
                 modifier = Modifier.fillMaxWidth()

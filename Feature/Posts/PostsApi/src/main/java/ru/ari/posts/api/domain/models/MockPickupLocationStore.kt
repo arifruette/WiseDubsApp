@@ -11,7 +11,7 @@ object MockPickupLocationStore {
             floor = "2",
             room = "201",
             comment = "Возле лифта",
-            displayText = "Корпус 1, Подъезд A, Этаж 2, Комната 201",
+            label = "У лифта",
             createdAt = "2023-10-10T10:00:00Z",
             updatedAt = "2023-10-10T10:00:00Z"
         ),
@@ -23,7 +23,7 @@ object MockPickupLocationStore {
             floor = "1",
             room = "105",
             comment = null,
-            displayText = "Корпус 2, Этаж 1, Комната 105",
+            label = null,
             createdAt = "2023-10-11T12:00:00Z",
             updatedAt = "2023-10-11T12:00:00Z"
         )
