@@ -8,7 +8,7 @@ import ru.ari.cache.data.room.entity.CachedPostImageEntity
 
 @Database(
     entities = [CachedPostEntity::class, CachedPostImageEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class PostDatabase : RoomDatabase() {

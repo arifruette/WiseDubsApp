@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "ru.ari.navigation"
+    namespace = "ru.ari.navigation.api"
     compileSdk {
         version = release(36)
     }

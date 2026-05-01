@@ -22,7 +22,9 @@ data class CachedPost(
     val isReserved: Boolean,
     val exchange: String,
     val reservedBy: String,
+    val reservedById: Long? = null,
     val authorEmail: String?,
+    val authorTelegramId: String? = null,
     val messageId: String,
     val createdAt: String,
     val images: List<CachedPostImage>

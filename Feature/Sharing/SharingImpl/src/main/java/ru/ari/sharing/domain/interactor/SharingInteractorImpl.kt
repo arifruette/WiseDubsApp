@@ -14,7 +14,7 @@ class SharingInteractorImpl @Inject constructor(
 
     override suspend fun getPosts(forceRefresh: Boolean): Result<List<Post>> =
         withContext(Dispatchers.IO) {
-            postsInteractor.getAllPosts(forceRefresh = forceRefresh)
+            postsInteractor.getFeedPosts(forceRefresh = forceRefresh)
         }
 
     override suspend fun getPostById(id: Long): Result<Post> =

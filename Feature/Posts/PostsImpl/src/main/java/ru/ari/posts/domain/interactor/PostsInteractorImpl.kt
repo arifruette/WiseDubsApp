@@ -19,6 +19,11 @@ class PostsInteractorImpl @Inject constructor(
             postsRepository.getAllPosts(forceRefresh = forceRefresh)
         }
 
+    override suspend fun getFeedPosts(forceRefresh: Boolean): Result<List<Post>> =
+        withContext(Dispatchers.IO) {
+            postsRepository.getFeedPosts(forceRefresh = forceRefresh)
+        }
+
     override suspend fun getMyPosts(forceRefresh: Boolean): Result<List<Post>> =
         withContext(Dispatchers.IO) {
             postsRepository.getMyPosts(forceRefresh = forceRefresh)
@@ -27,6 +32,16 @@ class PostsInteractorImpl @Inject constructor(
     override suspend fun getPostById(id: Long): Result<Post> =
         withContext(Dispatchers.IO) {
             postsRepository.getPostById(id)
+        }
+
+    override suspend fun reservePost(postId: Long): Result<Post> =
+        withContext(Dispatchers.IO) {
+            postsRepository.reservePost(postId)
+        }
+
+    override suspend fun unreservePost(postId: Long): Result<Post> =
+        withContext(Dispatchers.IO) {
+            postsRepository.unreservePost(postId)
         }
 
     override suspend fun createPost(params: CreatePostParams): Result<Post> =

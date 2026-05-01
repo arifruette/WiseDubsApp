@@ -6,7 +6,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import ru.ari.cache.domain.datastore.DataStoreHelper
-import ru.ari.cache.data.datastore.MockDataStoreHelperImpl
+import ru.ari.cache.data.datastore.SessionDataStoreHelperImpl
 import ru.ari.cache.data.room.PostLocalDataSource
 import ru.ari.cache.data.room.dao.PostDao
 import ru.ari.cache.data.room.database.PostDatabase
@@ -18,7 +18,7 @@ interface CacheLibModule {
 
     @Binds
     @Singleton
-    fun bindDataStoreHelper(mockDataStoreHelperImpl: MockDataStoreHelperImpl): DataStoreHelper
+    fun bindDataStoreHelper(sessionDataStoreHelperImpl: SessionDataStoreHelperImpl): DataStoreHelper
 
     @Binds
     @Singleton

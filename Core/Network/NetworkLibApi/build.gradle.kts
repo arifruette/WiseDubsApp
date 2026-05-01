@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "ru.ari.network"
+    namespace = "ru.ari.network.api"
     compileSdk {
         version = release(36)
     }

@@ -14,14 +14,16 @@ fun PostResponse.toDomain(baseUrl: String): Post = Post(
     id = id,
     title = title,
     description = description,
-    exchange = exchange,
+    exchange = exchange.orEmpty(),
     pickupLocation = pickupLocation.toDomain(),
     messageId = messageId,
     isActive = isActive,
     isReserved = isReserved,
     createdAt = createdAt,
-    reservedBy = reservedBy,
+    reservedBy = reservedBy.orEmpty(),
+    reservedById = reservedById,
     authorEmail = authorEmail,
+    authorTelegramId = authorTelegramId,
     images = images.map { it.toDomain(baseUrl) }
 )
 
@@ -52,7 +54,9 @@ fun Post.toCacheModel(): CachedPost = CachedPost(
     isReserved = isReserved,
     exchange = exchange,
     reservedBy = reservedBy,
+    reservedById = reservedById,
     authorEmail = authorEmail,
+    authorTelegramId = authorTelegramId,
     messageId = messageId,
     createdAt = createdAt,
     images = images.map(PostImage::toCacheModel)
@@ -82,7 +86,9 @@ fun CachedPost.toDomain(): Post = Post(
     isReserved = isReserved,
     createdAt = createdAt,
     reservedBy = reservedBy,
+    reservedById = reservedById,
     authorEmail = authorEmail,
+    authorTelegramId = authorTelegramId,
     images = images.map(CachedPostImage::toDomain)
 )
 

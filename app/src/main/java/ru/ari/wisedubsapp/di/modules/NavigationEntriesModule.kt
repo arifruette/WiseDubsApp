@@ -6,6 +6,7 @@ import ru.ari.managepost.di.ManagePostScreenProviderModule
 import ru.ari.myposts.di.MyPostsScreenProviderModule
 import ru.ari.registration.di.modules.RegistrationRouteProviderModule
 import ru.ari.sharing.di.SharingScreenProviderModule
+import ru.ari.sharingpostdetails.di.SharingPostDetailsScreenProviderModule
 
 @Module(
     includes = [
@@ -13,6 +14,7 @@ import ru.ari.sharing.di.SharingScreenProviderModule
         ManagePostScreenProviderModule::class,
         MyPostsScreenProviderModule::class,
         SharingScreenProviderModule::class,
+        SharingPostDetailsScreenProviderModule::class,
         RegistrationRouteProviderModule::class
     ]
 )
