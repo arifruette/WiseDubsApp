@@ -19,15 +19,24 @@ class PostsInteractorImpl @Inject constructor(
             postsRepository.getAllPosts(forceRefresh = forceRefresh)
         }
 
+    override fun observeAllPosts(): kotlinx.coroutines.flow.Flow<List<Post>> =
+        postsRepository.observeAllPosts()
+
     override suspend fun getFeedPosts(forceRefresh: Boolean): Result<List<Post>> =
         withContext(Dispatchers.IO) {
             postsRepository.getFeedPosts(forceRefresh = forceRefresh)
         }
 
+    override fun observeFeedPosts(): kotlinx.coroutines.flow.Flow<List<Post>> =
+        postsRepository.observeFeedPosts()
+
     override suspend fun getMyPosts(forceRefresh: Boolean): Result<List<Post>> =
         withContext(Dispatchers.IO) {
             postsRepository.getMyPosts(forceRefresh = forceRefresh)
         }
+
+    override fun observeMyPosts(): kotlinx.coroutines.flow.Flow<List<Post>> =
+        postsRepository.observeMyPosts()
 
     override suspend fun getPostById(id: Long): Result<Post> =
         withContext(Dispatchers.IO) {

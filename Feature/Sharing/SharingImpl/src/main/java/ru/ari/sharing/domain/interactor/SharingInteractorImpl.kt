@@ -17,6 +17,9 @@ class SharingInteractorImpl @Inject constructor(
             postsInteractor.getFeedPosts(forceRefresh = forceRefresh)
         }
 
+    override fun observePosts(): kotlinx.coroutines.flow.Flow<List<Post>> =
+        postsInteractor.observeFeedPosts()
+
     override suspend fun getPostById(id: Long): Result<Post> =
         withContext(Dispatchers.IO) {
             postsInteractor.getPostById(id)

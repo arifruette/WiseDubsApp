@@ -19,15 +19,27 @@ interface PostDao {
 
     @Transaction
     @Query("SELECT * FROM cached_posts WHERE scope = :scope")
-    suspend fun getPosts(scope: String): List<CachedPostWithImages>
+    fun observePosts(scope: String): kotlinx.coroutines.flow.Flow<List<CachedPostWithImages>>
+
+    @Transaction
+    @Query("SELECT * FROM cached_posts WHERE scope = :scope")
+    suspend fun getPostsSync(scope: String): List<CachedPostWithImages>
 
     @Transaction
     @Query("SELECT * FROM cached_posts WHERE postId = :id LIMIT 1")
-    suspend fun getPostById(id: Long): CachedPostWithImages?
+    suspend fun getPostByIdSync(id: Long): CachedPostWithImages?
 
     @Query("DELETE FROM cached_post_images WHERE postCacheKey IN (SELECT cacheKey FROM cached_posts WHERE scope = :scope)")
     suspend fun deletePostImagesByScope(scope: String)
 
     @Query("DELETE FROM cached_posts WHERE scope = :scope")
     suspend fun deletePostsByScope(scope: String)
+
+    @Transaction
+    suspend fun replacePosts(scope: String, posts: List<CachedPostEntity>, images: List<CachedPostImageEntity>) {
+        deletePostImagesByScope(scope)
+        deletePostsByScope(scope)
+        insertPosts(posts)
+        insertPostImages(images)
+    }
 }

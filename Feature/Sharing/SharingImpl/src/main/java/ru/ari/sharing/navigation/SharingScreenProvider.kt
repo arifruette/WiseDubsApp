@@ -70,7 +70,7 @@ private fun SharingScreenRoute(
                         isFirstResume = false
                         SharingScreenAction.LoadPosts
                     } else {
-                        SharingScreenAction.RefreshPosts
+                        SharingScreenAction.SilentRefreshPosts
                     }
                 )
             }

@@ -32,4 +32,5 @@ android {
 dependencies {
     api(projects.networkLibApi)
     api(projects.postsApi)
+    implementation(libs.androidx.core.ktx)
 }

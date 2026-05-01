@@ -28,7 +28,11 @@ internal fun SharingScreen(
     uiState: SharingScreenUiState,
     onAction: (SharingScreenAction) -> Unit
 ) {
-    val isRefreshing = (uiState as? SharingScreenUiState.Content)?.isRefreshing == true
+    val isRefreshing = when (uiState) {
+        is SharingScreenUiState.Content -> uiState.isRefreshing
+        is SharingScreenUiState.Empty -> uiState.isRefreshing
+        SharingScreenUiState.Loading -> false
+    }
 
     SwipeRefresh(
         state = rememberSwipeRefreshState(isRefreshing),
@@ -49,11 +53,12 @@ internal fun SharingScreen(
                 }
             }
 
-            SharingScreenUiState.Empty -> {
+            is SharingScreenUiState.Empty -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(color = MaterialTheme.colorScheme.background),
+                        .background(color = MaterialTheme.colorScheme.background)
+                        .verticalScroll(rememberScrollState()),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
