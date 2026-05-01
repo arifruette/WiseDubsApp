@@ -11,7 +11,9 @@ sealed interface SharingScreenUiState {
     data object Loading : SharingScreenUiState
 
     @Immutable
-    data object Empty : SharingScreenUiState
+    data class Empty(
+        val isRefreshing: Boolean = false
+    ) : SharingScreenUiState
 
     @Immutable
     data class Content(

@@ -6,6 +6,7 @@ import ru.ari.cache.domain.models.PostCacheScope
 interface PostDataSource {
     suspend fun savePosts(scope: PostCacheScope, posts: List<CachedPost>)
     suspend fun getPosts(scope: PostCacheScope): List<CachedPost>
+    fun observePosts(scope: PostCacheScope): kotlinx.coroutines.flow.Flow<List<CachedPost>>
     suspend fun getPostById(id: Long): CachedPost?
     suspend fun clearPosts(scope: PostCacheScope)
 }

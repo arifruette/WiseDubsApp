@@ -157,17 +157,14 @@ class MyPostsViewModel @Inject constructor(
     }
 
     private fun selectTab(tab: MyPostsTab) {
-        val current = _uiState.value
-        _uiState.value = when (current) {
-            is MyPostsScreenUiState.Loading -> current.copy(selectedTab = tab)
-            is MyPostsScreenUiState.Empty -> MyPostsScreenUiState.Empty(tab)
+        when (val current = _uiState.value) {
+            is MyPostsScreenUiState.Loading -> {
+                _uiState.value = current.copy(selectedTab = tab)
+            }
+
+            is MyPostsScreenUiState.Empty,
             is MyPostsScreenUiState.Content -> {
-                val filteredPosts = allPosts.filtered(tab)
-                if (filteredPosts.isEmpty()) {
-                    MyPostsScreenUiState.Empty(tab)
-                } else {
-                    current.copy(selectedTab = tab, posts = filteredPosts)
-                }
+                publishState(selectedTab = tab, isRefreshing = false)
             }
         }
     }

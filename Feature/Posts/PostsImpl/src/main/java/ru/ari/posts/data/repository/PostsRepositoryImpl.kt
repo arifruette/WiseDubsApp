@@ -1,5 +1,7 @@
 package ru.ari.posts.data.repository
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.io.File
 import javax.inject.Inject
 import okhttp3.MediaType
@@ -29,25 +31,37 @@ class PostsRepositoryImpl @Inject constructor(
 ) : PostsRepository {
 
     override suspend fun getAllPosts(forceRefresh: Boolean): Result<List<Post>> =
-        getPosts(
+        updatePosts(
             scope = PostCacheScope.ALL,
-            forceRefresh = forceRefresh,
             remoteCall = postsRemoteApi::getAllPosts
         )
 
+    override fun observeAllPosts(): Flow<List<Post>> =
+        postDataSource.observePosts(PostCacheScope.ALL).map { list ->
+            list.map { it.toDomain() }
+        }
+
     override suspend fun getFeedPosts(forceRefresh: Boolean): Result<List<Post>> =
-        getPosts(
+        updatePosts(
             scope = PostCacheScope.FEED,
-            forceRefresh = forceRefresh,
             remoteCall = postsRemoteApi::getFeedPosts
         )
 
+    override fun observeFeedPosts(): Flow<List<Post>> =
+        postDataSource.observePosts(PostCacheScope.FEED).map { list ->
+            list.map { it.toDomain() }
+        }
+
     override suspend fun getMyPosts(forceRefresh: Boolean): Result<List<Post>> =
-        getPosts(
+        updatePosts(
             scope = PostCacheScope.MY,
-            forceRefresh = forceRefresh,
             remoteCall = postsRemoteApi::getMyPosts
         )
+
+    override fun observeMyPosts(): Flow<List<Post>> =
+        postDataSource.observePosts(PostCacheScope.MY).map { list ->
+            list.map { it.toDomain() }
+        }
 
     override suspend fun getPostById(id: Long): Result<Post> =
         loadSinglePost { postsRemoteApi.getPostById(id) }
@@ -70,7 +84,7 @@ class PostsRepositoryImpl @Inject constructor(
                 images = params.imageFiles.toImageParts()
             ).toDomain(baseUrl)
 
-            clearPostsCache()
+            upsertPostInCache(scope = PostCacheScope.MY, post = createdPost)
             Result.Success(createdPost)
         } catch (e: HttpException) {
             e.toResultError()
@@ -91,7 +105,8 @@ class PostsRepositoryImpl @Inject constructor(
                 images = params.imageFiles?.toImageParts().orEmpty()
             ).toDomain(baseUrl)
 
-            clearPostsCache()
+            updatePostInExistingScopes(updatedPost)
+            upsertPostInCache(scope = PostCacheScope.MY, post = updatedPost)
             Result.Success(updatedPost)
         } catch (e: HttpException) {
             e.toResultError()
@@ -107,7 +122,8 @@ class PostsRepositoryImpl @Inject constructor(
                 isActive = isActive.toString()
             ).toDomain(baseUrl)
 
-            clearPostsCache()
+            updatePostInExistingScopes(updatedPost)
+            upsertPostInCache(scope = PostCacheScope.MY, post = updatedPost)
             Result.Success(updatedPost)
         } catch (e: HttpException) {
             e.toResultError()
@@ -115,46 +131,20 @@ class PostsRepositoryImpl @Inject constructor(
             Result.Exception(e)
         }
 
-    private suspend fun getPosts(
+    private suspend fun updatePosts(
         scope: PostCacheScope,
-        forceRefresh: Boolean,
         remoteCall: suspend () -> List<PostResponse>
     ): Result<List<Post>> {
-        if (!forceRefresh) {
-            val cachedPosts = postDataSource.getPosts(scope).map { it.toDomain() }
-            if (cachedPosts.isNotEmpty()) {
-                return Result.Success(cachedPosts)
-            }
-        }
-
         return try {
             val baseUrl = authRetrofit.baseUrl().toString()
             val remotePosts = remoteCall().map { it.toDomain(baseUrl) }
             postDataSource.savePosts(scope, remotePosts.map { it.toCacheModel() })
             Result.Success(remotePosts)
         } catch (e: HttpException) {
-            getCachedPostsOr(scope) { e.toResultError() }
+            Result.Error(code = e.code(), message = e.toResultError().message)
         } catch (e: Throwable) {
-            getCachedPostsOr(scope) { Result.Exception(e) }
+            Result.Exception(e)
         }
-    }
-
-    private suspend fun getCachedPostsOr(
-        scope: PostCacheScope,
-        onEmptyCache: () -> Result<List<Post>>
-    ): Result<List<Post>> {
-        val cachedPosts = postDataSource.getPosts(scope).map { it.toDomain() }
-        return if (cachedPosts.isNotEmpty()) {
-            Result.Success(cachedPosts)
-        } else {
-            onEmptyCache()
-        }
-    }
-
-    private suspend fun clearPostsCache() {
-        postDataSource.clearPosts(PostCacheScope.MY)
-        postDataSource.clearPosts(PostCacheScope.ALL)
-        postDataSource.clearPosts(PostCacheScope.FEED)
     }
 
     private suspend fun loadSinglePost(remoteCall: suspend () -> PostResponse): Result<Post> =
@@ -171,13 +161,48 @@ class PostsRepositoryImpl @Inject constructor(
         try {
             val baseUrl = authRetrofit.baseUrl().toString()
             val updatedPost = remoteCall().toDomain(baseUrl)
-            clearPostsCache()
+            updatePostInExistingScopes(updatedPost)
             Result.Success(updatedPost)
         } catch (e: HttpException) {
             e.toResultError()
         } catch (e: Throwable) {
             Result.Exception(e)
         }
+
+    private suspend fun updatePostInExistingScopes(post: Post) {
+        listOf(PostCacheScope.MY, PostCacheScope.ALL, PostCacheScope.FEED).forEach { scope ->
+            val cachedPosts = postDataSource.getPosts(scope)
+            if (cachedPosts.any { cachedPost -> cachedPost.id == post.id }) {
+                val updatedPosts = cachedPosts
+                    .map { cachedPost ->
+                        if (cachedPost.id == post.id) {
+                            post.toCacheModel()
+                        } else {
+                            cachedPost
+                        }
+                    }
+                    .filterNot { cachedPost -> scope == PostCacheScope.FEED && !cachedPost.isActive }
+                postDataSource.savePosts(scope = scope, posts = updatedPosts)
+            }
+        }
+    }
+
+    private suspend fun upsertPostInCache(scope: PostCacheScope, post: Post) {
+        val cachedPosts = postDataSource.getPosts(scope)
+        val postCacheModel = post.toCacheModel()
+        val updatedPosts = if (cachedPosts.any { cachedPost -> cachedPost.id == post.id }) {
+            cachedPosts.map { cachedPost ->
+                if (cachedPost.id == post.id) {
+                    postCacheModel
+                } else {
+                    cachedPost
+                }
+            }
+        } else {
+            listOf(postCacheModel) + cachedPosts
+        }
+        postDataSource.savePosts(scope = scope, posts = updatedPosts)
+    }
 
     private fun HttpException.toResultError(): Result.Error {
         val detail = response()

@@ -32,11 +32,32 @@ class SharingViewModel @Inject constructor(
     private val _uiEffect = MutableSharedFlow<SharingScreenUiEffect>()
     val uiEffect: SharedFlow<SharingScreenUiEffect> = _uiEffect.asSharedFlow()
 
+    private var currentUserId: Long? = null
+    private var hasResolvedInitialLoad = false
+
+    init {
+        observePosts()
+    }
+
+    private fun observePosts() {
+        viewModelScope.launch {
+            val session = dataStoreHelper.getSessionState().firstOrNull()
+            currentUserId = session?.userId
+            sharingInteractor.observePosts().collect { posts ->
+                if (posts.isEmpty() && _uiState.value is SharingScreenUiState.Loading && !hasResolvedInitialLoad) {
+                    return@collect
+                }
+                publishPosts(posts, currentUserId)
+            }
+        }
+    }
+
     fun onAction(action: SharingScreenAction) {
         when (action) {
-            SharingScreenAction.LoadPosts -> loadPosts(isRefresh = false)
-            SharingScreenAction.RefreshPosts -> loadPosts(isRefresh = true)
-            SharingScreenAction.RetryLoadPosts -> loadPosts(isRefresh = false)
+            SharingScreenAction.LoadPosts -> loadPosts(mode = LoadMode.Initial)
+            SharingScreenAction.RefreshPosts -> loadPosts(mode = LoadMode.UserRefresh)
+            SharingScreenAction.SilentRefreshPosts -> loadPosts(mode = LoadMode.SilentRefresh)
+            SharingScreenAction.RetryLoadPosts -> loadPosts(mode = LoadMode.Initial)
             is SharingScreenAction.OpenPostDetails -> emitOpenDetails(
                 postId = action.postId,
                 autoReserve = false
@@ -59,60 +80,106 @@ class SharingViewModel @Inject constructor(
         }
     }
 
-    private fun loadPosts(isRefresh: Boolean) {
-        if (isRefresh) {
-            markRefreshing()
-        } else {
-            _uiState.value = SharingScreenUiState.Loading
+    private fun loadPosts(mode: LoadMode) {
+        if (mode == LoadMode.Initial && _uiState.value is SharingScreenUiState.Content) {
+            // Already have content, downgrade Initial to SilentRefresh to avoid shimmer
+            loadPosts(LoadMode.SilentRefresh)
+            return
+        }
+
+        when (mode) {
+            LoadMode.Initial -> {
+                if (_uiState.value !is SharingScreenUiState.Content) {
+                    _uiState.value = SharingScreenUiState.Loading
+                }
+            }
+            LoadMode.UserRefresh -> markRefreshing()
+            LoadMode.SilentRefresh -> Unit
         }
 
         viewModelScope.launch {
-            val currentUserId = dataStoreHelper.getSessionState().firstOrNull()?.userId
-            when (val result = sharingInteractor.getPosts(forceRefresh = isRefresh)) {
+            when (val result = sharingInteractor.getPosts(forceRefresh = mode.forceRefresh)) {
                 is Result.Success -> {
-                    val uiPosts = sharingPostUiMapper.map(
-                        posts = result.data,
-                        currentUserId = currentUserId
-                    )
-                    _uiState.value = if (uiPosts.isEmpty()) {
-                        SharingScreenUiState.Empty
-                    } else {
-                        SharingScreenUiState.Content(posts = uiPosts, isRefreshing = false)
-                    }
+                    hasResolvedInitialLoad = true
+                    publishPosts(result.data, currentUserId)
+                    clearRefreshState()
                 }
 
                 is Result.Error -> {
-                    clearRefreshAfterFailure(isRefresh)
-                    _uiEffect.emit(SharingScreenUiEffect.ShowError(result.message))
+                    handleLoadError(mode, result.message)
                 }
 
                 is Result.Exception -> {
-                    clearRefreshAfterFailure(isRefresh)
-                    _uiEffect.emit(
-                        SharingScreenUiEffect.ShowError(
-                            result.error.message ?: "Непредвиденная ошибка"
-                        )
-                    )
+                    handleLoadError(mode, result.error.message ?: "Непредвиденная ошибка")
                 }
             }
         }
+    }
+
+    private fun handleLoadError(mode: LoadMode, message: String) {
+        clearRefreshState()
+        if (mode != LoadMode.SilentRefresh) {
+            viewModelScope.launch {
+                _uiEffect.emit(SharingScreenUiEffect.ShowError(message))
+            }
+        }
+        if (mode == LoadMode.Initial && _uiState.value is SharingScreenUiState.Loading) {
+            hasResolvedInitialLoad = true
+            _uiState.value = SharingScreenUiState.Empty(isRefreshing = false)
+        }
+    }
+
+    private fun publishPosts(
+        posts: List<ru.ari.posts.api.domain.models.Post>,
+        currentUserId: Long?
+    ) {
+        val uiPosts = sharingPostUiMapper.map(
+            posts = posts,
+            currentUserId = currentUserId
+        )
+        _uiState.update { state ->
+            if (uiPosts.isEmpty()) {
+                SharingScreenUiState.Empty(isRefreshing = state.isRefreshing())
+            } else {
+                SharingScreenUiState.Content(
+                    posts = uiPosts,
+                    isRefreshing = state.isRefreshing()
+                )
+            }
+        }
+    }
+
+    private fun SharingScreenUiState.isRefreshing(): Boolean = when (this) {
+        is SharingScreenUiState.Content -> isRefreshing
+        is SharingScreenUiState.Empty -> isRefreshing
+        SharingScreenUiState.Loading -> false
     }
 
     private fun markRefreshing() {
         _uiState.update { state ->
             when (state) {
                 is SharingScreenUiState.Content -> state.copy(isRefreshing = true)
-                else -> SharingScreenUiState.Loading
+                is SharingScreenUiState.Empty -> state.copy(isRefreshing = true)
+                SharingScreenUiState.Loading -> state
             }
         }
     }
 
-    private fun clearRefreshAfterFailure(isRefresh: Boolean) {
+    private fun clearRefreshState() {
         _uiState.update { state ->
-            when {
-                isRefresh && state is SharingScreenUiState.Content -> state.copy(isRefreshing = false)
-                else -> SharingScreenUiState.Empty
+            when (state) {
+                is SharingScreenUiState.Content -> state.copy(isRefreshing = false)
+                is SharingScreenUiState.Empty -> state.copy(isRefreshing = false)
+                SharingScreenUiState.Loading -> state
             }
         }
+    }
+
+    private enum class LoadMode(
+        val forceRefresh: Boolean
+    ) {
+        Initial(forceRefresh = false),
+        UserRefresh(forceRefresh = true),
+        SilentRefresh(forceRefresh = true)
     }
 }

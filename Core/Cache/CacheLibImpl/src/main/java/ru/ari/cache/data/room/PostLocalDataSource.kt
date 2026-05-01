@@ -1,5 +1,7 @@
 package ru.ari.cache.data.room
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import ru.ari.cache.data.room.dao.PostDao
 import ru.ari.cache.data.room.entity.CachedPostEntity
 import ru.ari.cache.data.room.entity.CachedPostImageEntity
@@ -16,17 +18,23 @@ class PostLocalDataSource @Inject constructor(
 ) : PostDataSource {
 
     override suspend fun savePosts(scope: PostCacheScope, posts: List<CachedPost>) {
-        postDao.deletePostImagesByScope(scope.name)
-        postDao.deletePostsByScope(scope.name)
-        postDao.insertPosts(posts.map { it.toEntity(scope) })
-        postDao.insertPostImages(posts.flatMap { it.toImageEntities(scope) })
+        postDao.replacePosts(
+            scope = scope.name,
+            posts = posts.map { it.toEntity(scope) },
+            images = posts.flatMap { it.toImageEntities(scope) }
+        )
     }
 
     override suspend fun getPosts(scope: PostCacheScope): List<CachedPost> =
-        postDao.getPosts(scope.name).map { it.toDomain() }
+        postDao.getPostsSync(scope.name).map { it.toDomain() }
+
+    override fun observePosts(scope: PostCacheScope): Flow<List<CachedPost>> =
+        postDao.observePosts(scope.name).map { list ->
+            list.map { it.toDomain() }
+        }
 
     override suspend fun getPostById(id: Long): CachedPost? =
-        postDao.getPostById(id)?.toDomain()
+        postDao.getPostByIdSync(id)?.toDomain()
 
     override suspend fun clearPosts(scope: PostCacheScope) {
         postDao.deletePostImagesByScope(scope.name)
