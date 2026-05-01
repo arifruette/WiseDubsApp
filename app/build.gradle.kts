@@ -52,6 +52,7 @@ dependencies {
     implementation(projects.postsImpl)
     implementation(projects.managePostImpl)
     implementation(projects.myPostsImpl)
+    implementation(projects.profileImpl)
     implementation(projects.sharingPostDetailsApi)
     implementation(projects.sharingPostDetailsImpl)
     implementation(projects.composeCoreLib)

@@ -20,6 +20,9 @@ interface PostsRemoteApi {
     @GET("sharing/posts/me")
     suspend fun getMyPosts(): List<PostResponse>
 
+    @GET("sharing/posts/reserved/me")
+    suspend fun getReservedPosts(): List<PostResponse>
+
     @GET("sharing/posts/{id}")
     suspend fun getPostById(
         @Path("id") id: Long

@@ -63,6 +63,17 @@ class PostsRepositoryImpl @Inject constructor(
             list.map { it.toDomain() }
         }
 
+    override suspend fun getReservedPosts(forceRefresh: Boolean): Result<List<Post>> =
+        updatePosts(
+            scope = PostCacheScope.RESERVED,
+            remoteCall = postsRemoteApi::getReservedPosts
+        )
+
+    override fun observeReservedPosts(): Flow<List<Post>> =
+        postDataSource.observePosts(PostCacheScope.RESERVED).map { list ->
+            list.map { it.toDomain() }
+        }
+
     override suspend fun getPostById(id: Long): Result<Post> =
         loadSinglePost { postsRemoteApi.getPostById(id) }
 
@@ -170,7 +181,7 @@ class PostsRepositoryImpl @Inject constructor(
         }
 
     private suspend fun updatePostInExistingScopes(post: Post) {
-        listOf(PostCacheScope.MY, PostCacheScope.ALL, PostCacheScope.FEED).forEach { scope ->
+        listOf(PostCacheScope.MY, PostCacheScope.ALL, PostCacheScope.FEED, PostCacheScope.RESERVED).forEach { scope ->
             val cachedPosts = postDataSource.getPosts(scope)
             if (cachedPosts.any { cachedPost -> cachedPost.id == post.id }) {
                 val updatedPosts = cachedPosts
@@ -181,7 +192,9 @@ class PostsRepositoryImpl @Inject constructor(
                             cachedPost
                         }
                     }
-                    .filterNot { cachedPost -> scope == PostCacheScope.FEED && !cachedPost.isActive }
+                    .filterNot { cachedPost ->
+                        (scope == PostCacheScope.FEED || scope == PostCacheScope.RESERVED) && !cachedPost.isActive
+                    }
                 postDataSource.savePosts(scope = scope, posts = updatedPosts)
             }
         }

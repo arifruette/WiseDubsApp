@@ -26,7 +26,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -43,7 +42,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +55,7 @@ import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import java.io.File
 import kotlinx.collections.immutable.ImmutableList
+import ru.ari.designsystem.components.WiseDubsTopAppBar
 import ru.ari.designsystem.components.WiseDubsTextField
 import ru.ari.managepost.presentation.contract.ManagePostActionHandler
 import ru.ari.managepost.presentation.contract.ManagePostScreenAction
@@ -91,23 +90,12 @@ fun ManagePostScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = when (uiState.mode) {
-                            ManagePostMode.Create -> "Добавить объявление"
-                            is ManagePostMode.Edit -> "Редактирование"
-                        }
-                    )
+            WiseDubsTopAppBar(
+                title = when (uiState.mode) {
+                    ManagePostMode.Create -> "Добавить объявление"
+                    is ManagePostMode.Edit -> "Редактирование"
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад"
-                        )
-                    }
-                }
+                onBackClick = onBackClick
             )
         }
     ) { innerPadding ->

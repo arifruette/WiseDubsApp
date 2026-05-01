@@ -44,6 +44,12 @@ class AuthInteractorImpl @Inject constructor(
             }
         }
 
+    override suspend fun logout() {
+        withContext(Dispatchers.IO) {
+            dataStoreHelper.eraseSessionState()
+        }
+    }
+
     private suspend fun syncSessionAfterLogin(
         token: Token,
         fallbackLogin: String

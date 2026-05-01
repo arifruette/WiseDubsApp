@@ -62,9 +62,6 @@ fun PostLoginNavigation(
         LocalPostLoginNavigator provides postLoginNavigator
     ) {
         val entryProvider = entryProvider {
-            entry<Route.PostLogin.ProfileScreenRoute> {
-                Text(text = "Экран профиля")
-            }
             postLoginRoutes.fastForEach { routeProvider ->
                 with(routeProvider) {
                     provideRoute()

@@ -16,6 +16,9 @@ interface PostsRepository {
     suspend fun getMyPosts(forceRefresh: Boolean = false): Result<List<Post>>
     fun observeMyPosts(): Flow<List<Post>>
 
+    suspend fun getReservedPosts(forceRefresh: Boolean = false): Result<List<Post>>
+    fun observeReservedPosts(): Flow<List<Post>>
+
     suspend fun getPostById(id: Long): Result<Post>
 
     suspend fun reservePost(postId: Long): Result<Post>

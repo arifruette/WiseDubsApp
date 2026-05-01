@@ -11,4 +11,5 @@ interface AuthInteractor {
   suspend fun getCurrentUser(): Result<UserProfile>
   suspend fun register(user: UserRegisterParams): Result<UserRegister>
   suspend fun registerAndLogin(user: UserRegisterParams): Result<Token>
+  suspend fun logout()
 }
