@@ -28,6 +28,8 @@ class MockPostsDataSource @Inject constructor(
 
     fun getAllPosts(): List<Post> = sharingPosts.toList()
 
+    fun getFeedPosts(): List<Post> = sharingPosts.toList()
+
     fun getMyPosts(): List<Post> = myPosts.toList()
 
     fun getPostById(id: Long): Post? = (sharingPosts + myPosts).firstOrNull { it.id == id }
@@ -40,6 +42,38 @@ class MockPostsDataSource @Inject constructor(
 
         val updatedPost = myPosts[index].copy(isActive = isActive)
         myPosts[index] = updatedPost
+        return updatedPost
+    }
+
+    fun reservePost(id: Long): Post? {
+        val index = sharingPosts.indexOfFirst { it.id == id }
+        if (index == -1) {
+            return null
+        }
+
+        val current = sharingPosts[index]
+        val updatedPost = current.copy(
+            isReserved = true,
+            reservedBy = "mockkUserLogin",
+            reservedById = 1
+        )
+        sharingPosts[index] = updatedPost
+        return updatedPost
+    }
+
+    fun unreservePost(id: Long): Post? {
+        val index = sharingPosts.indexOfFirst { it.id == id }
+        if (index == -1) {
+            return null
+        }
+
+        val current = sharingPosts[index]
+        val updatedPost = current.copy(
+            isReserved = false,
+            reservedBy = "",
+            reservedById = null
+        )
+        sharingPosts[index] = updatedPost
         return updatedPost
     }
 

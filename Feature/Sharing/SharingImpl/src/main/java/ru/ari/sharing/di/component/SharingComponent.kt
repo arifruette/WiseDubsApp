@@ -2,6 +2,7 @@
 
 import androidx.lifecycle.ViewModelProvider
 import dagger.Component
+import ru.ari.cache.di.CacheApi
 import ru.ari.posts.api.di.PostsApi
 import ru.ari.sharing.di.modules.SharingBindsModule
 import ru.ari.sharing.di.scope.SharingScreenScope
@@ -9,7 +10,7 @@ import ru.ari.sharing.di.scope.SharingScreenScope
 @SharingScreenScope
 @Component(
     modules = [SharingBindsModule::class],
-    dependencies = [PostsApi::class]
+    dependencies = [PostsApi::class, CacheApi::class]
 )
 interface SharingComponent {
 
@@ -17,6 +18,9 @@ interface SharingComponent {
 
     @Component.Factory
     interface Factory {
-        fun create(postsApi: PostsApi): SharingComponent
+        fun create(
+            postsApi: PostsApi,
+            cacheApi: CacheApi
+        ): SharingComponent
     }
 }

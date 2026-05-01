@@ -1,10 +1,12 @@
 package ru.ari.posts.data.repository
 
 import java.io.File
+import javax.inject.Inject
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.MultipartBody.Part
 import okhttp3.RequestBody
+import org.json.JSONObject
 import retrofit2.HttpException
 import retrofit2.Retrofit
 import ru.ari.cache.domain.PostDataSource
@@ -19,7 +21,6 @@ import ru.ari.posts.data.api.PostsRemoteApi
 import ru.ari.posts.data.mappers.toCacheModel
 import ru.ari.posts.data.mappers.toDomain
 import ru.ari.posts.data.models.PostResponse
-import javax.inject.Inject
 
 class PostsRepositoryImpl @Inject constructor(
     private val postsRemoteApi: PostsRemoteApi,
@@ -34,6 +35,13 @@ class PostsRepositoryImpl @Inject constructor(
             remoteCall = postsRemoteApi::getAllPosts
         )
 
+    override suspend fun getFeedPosts(forceRefresh: Boolean): Result<List<Post>> =
+        getPosts(
+            scope = PostCacheScope.FEED,
+            forceRefresh = forceRefresh,
+            remoteCall = postsRemoteApi::getFeedPosts
+        )
+
     override suspend fun getMyPosts(forceRefresh: Boolean): Result<List<Post>> =
         getPosts(
             scope = PostCacheScope.MY,
@@ -41,31 +49,14 @@ class PostsRepositoryImpl @Inject constructor(
             remoteCall = postsRemoteApi::getMyPosts
         )
 
-    override suspend fun getPostById(id: Long): Result<Post> {
-        val cachedPost = postDataSource.getPostById(id)?.toDomain()
-        if (cachedPost != null) {
-            return Result.Success(cachedPost)
-        }
+    override suspend fun getPostById(id: Long): Result<Post> =
+        loadSinglePost { postsRemoteApi.getPostById(id) }
 
-        when (val myPostsResult = getMyPosts(forceRefresh = true)) {
-            is Result.Success -> {
-                myPostsResult.data.firstOrNull { it.id == id }?.let { return Result.Success(it) }
-            }
+    override suspend fun reservePost(postId: Long): Result<Post> =
+        mutatePost { postsRemoteApi.reservePost(postId) }
 
-            is Result.Error -> Unit
-            is Result.Exception -> Unit
-        }
-
-        return when (val postsResult = getAllPosts(forceRefresh = true)) {
-            is Result.Success -> {
-                postsResult.data.firstOrNull { it.id == id }?.let { Result.Success(it) }
-                    ?: Result.Error(404, "Пост с id=$id не найден")
-            }
-
-            is Result.Error -> postsResult
-            is Result.Exception -> postsResult
-        }
-    }
+    override suspend fun unreservePost(postId: Long): Result<Post> =
+        mutatePost { postsRemoteApi.unreservePost(postId) }
 
     override suspend fun createPost(params: CreatePostParams): Result<Post> =
         try {
@@ -76,14 +67,13 @@ class PostsRepositoryImpl @Inject constructor(
                 pickupLocationId = params.pickupLocationId.toString().toPart(),
                 exchange = params.exchange.toNullablePart(),
                 messageId = params.messageId.toPart(),
-                reservedBy = params.reservedBy.toPart(),
                 images = params.imageFiles.toImageParts()
             ).toDomain(baseUrl)
 
             clearPostsCache()
             Result.Success(createdPost)
         } catch (e: HttpException) {
-            Result.Error(e.code(), e.message())
+            e.toResultError()
         } catch (e: Throwable) {
             Result.Exception(e)
         }
@@ -98,14 +88,13 @@ class PostsRepositoryImpl @Inject constructor(
                 pickupLocationId = params.pickupLocationId?.toString()?.toPart(),
                 exchange = params.exchange.toNullablePart(),
                 messageId = params.messageId.toPart(),
-                reservedBy = params.reservedBy.toPart(),
                 images = params.imageFiles?.toImageParts().orEmpty()
             ).toDomain(baseUrl)
 
             clearPostsCache()
             Result.Success(updatedPost)
         } catch (e: HttpException) {
-            Result.Error(e.code(), e.message())
+            e.toResultError()
         } catch (e: Throwable) {
             Result.Exception(e)
         }
@@ -121,7 +110,7 @@ class PostsRepositoryImpl @Inject constructor(
             clearPostsCache()
             Result.Success(updatedPost)
         } catch (e: HttpException) {
-            Result.Error(e.code(), e.message())
+            e.toResultError()
         } catch (e: Throwable) {
             Result.Exception(e)
         }
@@ -144,7 +133,7 @@ class PostsRepositoryImpl @Inject constructor(
             postDataSource.savePosts(scope, remotePosts.map { it.toCacheModel() })
             Result.Success(remotePosts)
         } catch (e: HttpException) {
-            getCachedPostsOr(scope) { Result.Error(e.code(), e.message()) }
+            getCachedPostsOr(scope) { e.toResultError() }
         } catch (e: Throwable) {
             getCachedPostsOr(scope) { Result.Exception(e) }
         }
@@ -165,7 +154,46 @@ class PostsRepositoryImpl @Inject constructor(
     private suspend fun clearPostsCache() {
         postDataSource.clearPosts(PostCacheScope.MY)
         postDataSource.clearPosts(PostCacheScope.ALL)
+        postDataSource.clearPosts(PostCacheScope.FEED)
     }
+
+    private suspend fun loadSinglePost(remoteCall: suspend () -> PostResponse): Result<Post> =
+        try {
+            val baseUrl = authRetrofit.baseUrl().toString()
+            Result.Success(remoteCall().toDomain(baseUrl))
+        } catch (e: HttpException) {
+            e.toResultError()
+        } catch (e: Throwable) {
+            Result.Exception(e)
+        }
+
+    private suspend fun mutatePost(remoteCall: suspend () -> PostResponse): Result<Post> =
+        try {
+            val baseUrl = authRetrofit.baseUrl().toString()
+            val updatedPost = remoteCall().toDomain(baseUrl)
+            clearPostsCache()
+            Result.Success(updatedPost)
+        } catch (e: HttpException) {
+            e.toResultError()
+        } catch (e: Throwable) {
+            Result.Exception(e)
+        }
+
+    private fun HttpException.toResultError(): Result.Error {
+        val detail = response()
+            ?.errorBody()
+            ?.string()
+            ?.let { body -> parseErrorDetail(body) }
+            ?.takeIf(String::isNotBlank)
+
+        return Result.Error(
+            code = code(),
+            message = detail ?: "Неизвестная ошибка"
+        )
+    }
+
+    private fun parseErrorDetail(body: String): String? =
+        runCatching { JSONObject(body).optString("detail") }.getOrNull()
 
     private fun String.toPart(): RequestBody = RequestBody.create(MultipartBody.FORM, this)
 

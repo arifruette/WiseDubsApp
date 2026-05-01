@@ -1,8 +1,10 @@
 package ru.ari.auth.common.impl.data.api
 
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 import ru.ari.auth.common.impl.data.models.TokenResponse
+import ru.ari.auth.common.impl.data.models.UserResponse
 import ru.ari.auth.common.impl.data.models.UserLoginBody
 import ru.ari.auth.common.impl.data.models.UserRegisterBody
 import ru.ari.auth.common.impl.data.models.UserRegisterResponse
@@ -18,5 +20,8 @@ interface AuthRetrofitApi {
     suspend fun registerUser(
         @Body user: UserRegisterBody
     ): UserRegisterResponse
+
+    @GET("auth/me")
+    suspend fun getCurrentUser(): UserResponse
 
 }

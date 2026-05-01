@@ -11,6 +11,8 @@ import ru.ari.network.di.DaggerNetworkComponent
 import ru.ari.network.di.NetworkApi
 import ru.ari.posts.api.di.PostsApi
 import ru.ari.posts.di.DaggerPostsComponent
+import ru.ari.sharingpostdetails.api.di.SharingPostDetailsApi
+import ru.ari.sharingpostdetails.di.DaggerSharingPostDetailsFeatureComponent
 import ru.ari.wisedubsapp.di.component.AppComponent
 import ru.ari.wisedubsapp.di.component.DaggerAppComponent
 import ru.ari.wisedubsapp.di.utils.DepsStore
@@ -39,6 +41,9 @@ class WiseDubsApplication : Application(), DepsProvider {
                 cacheApi = deps(),
                 context = applicationContext
             )
+        }
+        register(SharingPostDetailsApi::class.java) {
+            DaggerSharingPostDetailsFeatureComponent.create()
         }
     }
 

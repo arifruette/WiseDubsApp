@@ -6,7 +6,7 @@ data class PostResponse(
     val id: Long,
     val title: String,
     val description: String,
-    val exchange: String,
+    val exchange: String?,
     @SerializedName("pickup_location")
     val pickupLocation: PickupLocationResponse,
     @SerializedName("message_id")
@@ -18,8 +18,12 @@ data class PostResponse(
     @SerializedName("created_at")
     val createdAt: String,
     @SerializedName("reserved_by")
-    val reservedBy: String,
+    val reservedBy: String?,
+    @SerializedName("reserved_by_id")
+    val reservedById: Long?,
     @SerializedName("author_email")
     val authorEmail: String?,
+    @SerializedName("author_telegram_id")
+    val authorTelegramId: String?,
     val images: List<ImageResponse>
 )

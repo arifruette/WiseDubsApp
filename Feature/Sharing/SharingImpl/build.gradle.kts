@@ -38,7 +38,9 @@ android {
 dependencies {
     api(projects.navigationApi)
     implementation(projects.sharingApi)
+    implementation(projects.sharingPostDetailsApi)
     implementation(projects.postsApi)
+    implementation(projects.cacheLibApi)
     implementation(projects.diCoreLib)
 
     implementation(projects.composeCoreLib)

@@ -28,7 +28,9 @@ data class CachedPostEntity(
     val isReserved: Boolean,
     val exchange: String,
     val reservedBy: String,
+    val reservedById: Long?,
     val authorEmail: String?,
+    val authorTelegramId: String?,
     val messageId: String,
     val createdAt: String
 )

@@ -2,24 +2,27 @@ package ru.ari.sharing.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ru.ari.cache.domain.datastore.DataStoreHelper
 import ru.ari.network.domain.models.Result
 import ru.ari.sharing.api.domain.interactor.SharingInteractor
 import ru.ari.sharing.domain.mapper.SharingPostUiMapper
 import ru.ari.sharing.presentation.contract.SharingScreenAction
 import ru.ari.sharing.presentation.contract.SharingScreenUiEffect
 import ru.ari.sharing.presentation.contract.SharingScreenUiState
-import javax.inject.Inject
 
 class SharingViewModel @Inject constructor(
     private val sharingInteractor: SharingInteractor,
+    private val dataStoreHelper: DataStoreHelper,
     private val sharingPostUiMapper: SharingPostUiMapper
 ) : ViewModel() {
 
@@ -34,17 +37,25 @@ class SharingViewModel @Inject constructor(
             SharingScreenAction.LoadPosts -> loadPosts(isRefresh = false)
             SharingScreenAction.RefreshPosts -> loadPosts(isRefresh = true)
             SharingScreenAction.RetryLoadPosts -> loadPosts(isRefresh = false)
-            is SharingScreenAction.OpenPostDetails -> viewModelScope.launch {
-                _uiEffect.emit(SharingScreenUiEffect.NavigateToDetails(action.postId))
-            }
+            is SharingScreenAction.OpenPostDetails -> emitOpenDetails(
+                postId = action.postId,
+                autoReserve = false
+            )
+            is SharingScreenAction.BookItem -> emitOpenDetails(
+                postId = action.postId,
+                autoReserve = true
+            )
+        }
+    }
 
-            is SharingScreenAction.BookItem -> viewModelScope.launch {
-                _uiEffect.emit(
-                    SharingScreenUiEffect.ShowError(
-                        "Бронирование будет доступно позже"
-                    )
+    private fun emitOpenDetails(postId: Long, autoReserve: Boolean) {
+        viewModelScope.launch {
+            _uiEffect.emit(
+                SharingScreenUiEffect.NavigateToDetails(
+                    postId = postId,
+                    autoReserve = autoReserve
                 )
-            }
+            )
         }
     }
 
@@ -56,9 +67,13 @@ class SharingViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            val currentUserId = dataStoreHelper.getSessionState().firstOrNull()?.userId
             when (val result = sharingInteractor.getPosts(forceRefresh = isRefresh)) {
                 is Result.Success -> {
-                    val uiPosts = sharingPostUiMapper.map(result.data)
+                    val uiPosts = sharingPostUiMapper.map(
+                        posts = result.data,
+                        currentUserId = currentUserId
+                    )
                     _uiState.value = if (uiPosts.isEmpty()) {
                         SharingScreenUiState.Empty
                     } else {
@@ -75,8 +90,7 @@ class SharingViewModel @Inject constructor(
                     clearRefreshAfterFailure(isRefresh)
                     _uiEffect.emit(
                         SharingScreenUiEffect.ShowError(
-                            result.error.message
-                                ?: "Непредвиденная ошибка"
+                            result.error.message ?: "Непредвиденная ошибка"
                         )
                     )
                 }

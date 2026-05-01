@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "ru.ari.cache"
+    namespace = "ru.ari.cache.api"
     compileSdk {
         version = release(36)
     }

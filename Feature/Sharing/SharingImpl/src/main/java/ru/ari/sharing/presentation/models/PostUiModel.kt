@@ -9,8 +9,16 @@ data class PostUiModel(
     val title: String,
     val exchange: String,
     val authorEmail: String?,
+    val reservationStatus: PostReservationStatusUi,
     val images: ImmutableList<PostImageUiModel>
 )
+
+@Immutable
+enum class PostReservationStatusUi {
+    AVAILABLE,
+    RESERVED_BY_ME,
+    RESERVED_BY_OTHER
+}
 
 @Immutable
 data class PostImageUiModel(

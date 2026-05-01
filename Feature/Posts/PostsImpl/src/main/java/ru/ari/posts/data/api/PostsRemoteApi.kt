@@ -14,8 +14,26 @@ interface PostsRemoteApi {
     @GET("sharing/posts")
     suspend fun getAllPosts(): List<PostResponse>
 
+    @GET("sharing/posts/feed")
+    suspend fun getFeedPosts(): List<PostResponse>
+
     @GET("sharing/posts/me")
     suspend fun getMyPosts(): List<PostResponse>
+
+    @GET("sharing/posts/{id}")
+    suspend fun getPostById(
+        @Path("id") id: Long
+    ): PostResponse
+
+    @POST("sharing/posts/{id}/reserve")
+    suspend fun reservePost(
+        @Path("id") id: Long
+    ): PostResponse
+
+    @POST("sharing/posts/{id}/unreserve")
+    suspend fun unreservePost(
+        @Path("id") id: Long
+    ): PostResponse
 
     @Multipart
     @POST("sharing/posts")
@@ -25,7 +43,6 @@ interface PostsRemoteApi {
         @Part("pickup_location_id") pickupLocationId: RequestBody,
         @Part("exchange") exchange: RequestBody?,
         @Part("message_id") messageId: RequestBody,
-        @Part("reserved_by") reservedBy: RequestBody,
         @Part images: List<MultipartBody.Part>
     ): PostResponse
 
@@ -45,7 +62,6 @@ interface PostsRemoteApi {
         @Part("pickup_location_id") pickupLocationId: RequestBody?,
         @Part("exchange") exchange: RequestBody?,
         @Part("message_id") messageId: RequestBody?,
-        @Part("reserved_by") reservedBy: RequestBody?,
         @Part images: List<MultipartBody.Part>
     ): PostResponse
 }

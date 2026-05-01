@@ -5,6 +5,6 @@ import ru.ari.posts.api.domain.models.Post
 import ru.ari.sharing.presentation.models.PostUiModel
 
 interface SharingPostUiMapper {
-    fun map(post: Post): PostUiModel
-    fun map(posts: List<Post>): ImmutableList<PostUiModel>
+    fun map(post: Post, currentUserId: Long?): PostUiModel
+    fun map(posts: List<Post>, currentUserId: Long?): ImmutableList<PostUiModel>
 }

@@ -11,6 +11,8 @@ data class Post(
     val isReserved: Boolean,
     val createdAt: String,
     val reservedBy: String,
+    val reservedById: Long? = null,
     val authorEmail: String?,
+    val authorTelegramId: String? = null,
     val images: List<PostImage>
 )
