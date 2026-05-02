@@ -5,6 +5,6 @@ import ru.ari.cache.domain.models.SessionState
 
 interface DataStoreHelper {
     suspend fun saveSessionState(sessionState: SessionState)
-    suspend fun getSessionState(): Flow<SessionState?>
+    fun getSessionState(): Flow<SessionState?>
     suspend fun eraseSessionState()
 }

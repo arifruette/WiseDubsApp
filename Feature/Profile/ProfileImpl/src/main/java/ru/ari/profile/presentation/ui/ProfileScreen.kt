@@ -44,6 +44,16 @@ fun ProfileScreen(
     onAction: (ProfileScreenAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (uiState.isLogoutLoading) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier.fillMaxSize()
+        ) {
+            WiseDubsProgressIndicator()
+        }
+        return
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -154,6 +164,11 @@ private fun ProfileSection(
                     )
                 }
             }
+            else -> ErrorBlock(
+                message = "Не удалось загрузить профиль",
+                onRetry = onRetry,
+                modifier = Modifier.padding(16.dp)
+            )
         }
     }
 }

@@ -91,7 +91,6 @@ class ReservedPostsViewModel @Inject constructor(
 
     private fun PickupLocation.toDisplayText(): String =
         listOfNotNull(
-            label?.takeIf(String::isNotBlank),
             corpus?.takeIf(String::isNotBlank)?.let { "корпус $it" },
             room.takeIf(String::isNotBlank)?.let { "ауд. $it" }
         ).joinToString(", ").ifBlank { "Место не указано" }

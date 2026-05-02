@@ -39,6 +39,7 @@ dependencies {
     implementation(projects.postsApi)
     implementation(projects.diCoreLib)
     implementation(projects.composeCoreLib)
+    implementation(projects.designSystemCoreLib)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

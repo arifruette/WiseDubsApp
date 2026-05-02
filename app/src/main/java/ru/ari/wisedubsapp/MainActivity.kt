@@ -5,14 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toImmutableList
+import ru.ari.composelib.AppMessageHost
+import ru.ari.composelib.LocalAppMessageHost
 import ru.ari.designsystem.theme.WiseDubsAppTheme
 import ru.ari.designsystem.theme.setEdgeToEdgeConfig
 import ru.ari.navigation.NavigationRoot
@@ -47,15 +49,24 @@ class MainActivity : ComponentActivity() {
             when (startRouteState) {
                 is StartRouteState.Loading -> Unit
                 is StartRouteState.Computed -> {
+                    val computedState = startRouteState as StartRouteState.Computed
                     WiseDubsAppTheme {
-                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        val snackbarHostState = remember { SnackbarHostState() }
+                        val appMessageHost = remember(snackbarHostState) {
+                            AppMessageHost { message ->
+                                snackbarHostState.showSnackbar(message)
+                            }
+                        }
+                        CompositionLocalProvider(
+                            LocalAppMessageHost provides appMessageHost
+                        ) {
                             NavigationRoot(
-                                startRoute = (startRouteState as StartRouteState.Computed).route,
+                                startRoute = computedState.route,
+                                navigationResetKey = computedState.navigationResetKey,
                                 preLoginRoutes = preLoginRoutes,
                                 postLoginRoutes = postLoginRoutes,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(innerPadding)
+                                snackbarHostState = snackbarHostState,
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
                     }

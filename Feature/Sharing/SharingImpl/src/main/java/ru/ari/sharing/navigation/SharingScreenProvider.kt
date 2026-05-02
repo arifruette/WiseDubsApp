@@ -1,6 +1,5 @@
 package ru.ari.sharing.navigation
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +14,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import javax.inject.Inject
 import ru.ari.cache.di.CacheApi
+import ru.ari.composelib.LocalAppMessageHost
 import ru.ari.composelib.LocalPostLoginNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.composelib.di.utils.rememberScopedComponent
@@ -54,6 +54,7 @@ private fun SharingScreenRoute(
     viewModel: SharingViewModel
 ) {
     val context = LocalContext.current
+    val appMessageHost = LocalAppMessageHost.current
     val navigator = LocalPostLoginNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val sharingPostDetailsLauncher = remember(context) {
@@ -85,7 +86,7 @@ private fun SharingScreenRoute(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is SharingScreenUiEffect.ShowError -> {
-                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                    appMessageHost.showMessage(effect.message)
                 }
 
                 is SharingScreenUiEffect.NavigateToDetails -> {

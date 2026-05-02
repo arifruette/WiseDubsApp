@@ -1,6 +1,5 @@
 package ru.ari.myposts.navigation
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -9,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import ru.ari.composelib.LocalAppMessageHost
 import ru.ari.composelib.LocalPostLoginNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.composelib.di.utils.rememberScopedComponent
@@ -45,7 +45,7 @@ class MyPostsScreenRouteProvider @Inject constructor() : RouteEntryProvider {
 private fun MyPostsScreenRoute(
     viewModel: MyPostsViewModel
 ) {
-    val context = LocalContext.current
+    val appMessageHost = LocalAppMessageHost.current
     val navigator = LocalPostLoginNavigator.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val actionHandler = remember(viewModel) {
@@ -57,7 +57,7 @@ private fun MyPostsScreenRoute(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is MyPostsScreenUiEffect.ShowError -> {
-                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                    appMessageHost.showMessage(effect.message)
                 }
 
                 MyPostsScreenUiEffect.OpenCreatePost -> {

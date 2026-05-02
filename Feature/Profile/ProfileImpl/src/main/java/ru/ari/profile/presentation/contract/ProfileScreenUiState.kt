@@ -8,5 +8,6 @@ data class ProfileScreenUiState(
     val isProfileLoading: Boolean = true,
     val profile: ProfileUiModel? = null,
     val profileError: String? = null,
-    val showLogoutDialog: Boolean = false
+    val showLogoutDialog: Boolean = false,
+    val isLogoutLoading: Boolean = false
 )

@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
+import ru.ari.designsystem.components.WiseDubsTopAppBar
 import ru.ari.myposts.presentation.contract.MyPostsActionHandler
 import ru.ari.myposts.presentation.contract.MyPostsScreenAction
 import ru.ari.myposts.presentation.contract.MyPostsScreenUiState
@@ -46,6 +47,9 @@ fun MyPostsScreen(
 ) {
     Scaffold(
         modifier = modifier,
+        topBar = {
+            WiseDubsTopAppBar(title = "Мои объявления")
+        },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             FloatingActionButton(

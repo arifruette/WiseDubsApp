@@ -3,6 +3,7 @@ package ru.ari.profile.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -27,10 +28,17 @@ class ProfileViewModel @Inject constructor(
     private val _uiEffect = MutableSharedFlow<ProfileScreenUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
+    private var refreshJob: Job? = null
+
+    init {
+        observeProfile()
+        refreshProfile()
+    }
+
     fun onAction(action: ProfileScreenAction) {
         when (action) {
-            ProfileScreenAction.Load -> loadProfile()
-            ProfileScreenAction.RetryProfile -> loadProfile()
+            ProfileScreenAction.Load -> Unit
+            ProfileScreenAction.RetryProfile -> refreshProfile()
             ProfileScreenAction.ClickReservedPosts -> emitEffect(ProfileScreenUiEffect.OpenReservedPosts)
             ProfileScreenAction.ClickLogout -> {
                 _uiState.update { it.copy(showLogoutDialog = true) }
@@ -42,20 +50,45 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    private fun loadProfile() {
+    private fun observeProfile() {
         viewModelScope.launch {
+            authInteractor.observeCurrentUser().collect { profile ->
+                _uiState.update {
+                    if (profile == null) {
+                        it.copy(
+                            profile = null,
+                            isProfileLoading = false,
+                            profileError = null,
+                            showLogoutDialog = false
+                        )
+                    } else {
+                        it.copy(
+                            profile = profile.toUiModel(),
+                            isProfileLoading = false,
+                            profileError = null,
+                            isLogoutLoading = false
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun refreshProfile() {
+        if (refreshJob?.isActive == true) return
+
+        refreshJob = viewModelScope.launch {
             _uiState.update {
                 it.copy(
-                    isProfileLoading = true,
+                    isProfileLoading = it.profile == null,
                     profileError = null
                 )
             }
-            when (val result = authInteractor.getCurrentUser()) {
+            when (val result = authInteractor.refreshCurrentUser()) {
                 is Result.Success -> {
                     _uiState.update {
                         it.copy(
                             isProfileLoading = false,
-                            profile = result.data.toUiModel(),
                             profileError = null
                         )
                     }
@@ -68,21 +101,37 @@ class ProfileViewModel @Inject constructor(
 
     private fun logout() {
         viewModelScope.launch {
-            _uiState.update { it.copy(showLogoutDialog = false) }
+            _uiState.update {
+                it.copy(
+                    showLogoutDialog = false,
+                    isLogoutLoading = true
+                )
+            }
             runCatching { authInteractor.logout() }
-                .onSuccess { _uiEffect.emit(ProfileScreenUiEffect.NavigateToLogin) }
                 .onFailure {
+                    _uiState.update { state -> state.copy(isLogoutLoading = false) }
                     _uiEffect.emit(ProfileScreenUiEffect.ShowError("Не удалось выйти из аккаунта"))
                 }
         }
     }
 
     private fun showProfileError(message: String) {
-        _uiState.update {
-            it.copy(
-                isProfileLoading = false,
-                profileError = message
-            )
+        val hasCachedProfile = _uiState.value.profile != null
+        if (hasCachedProfile) {
+            _uiState.update {
+                it.copy(
+                    isProfileLoading = false,
+                    profileError = null
+                )
+            }
+            emitEffect(ProfileScreenUiEffect.ShowError(message))
+        } else {
+            _uiState.update {
+                it.copy(
+                    isProfileLoading = false,
+                    profileError = message
+                )
+            }
         }
     }
 

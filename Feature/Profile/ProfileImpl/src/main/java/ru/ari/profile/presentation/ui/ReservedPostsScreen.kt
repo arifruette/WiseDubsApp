@@ -47,7 +47,7 @@ fun ReservedPostsScreen(
         modifier = modifier,
         topBar = {
             WiseDubsTopAppBar(
-                title = "Забронированные посты",
+                title = "Мои бронирования",
                 onBackClick = { onAction(ReservedPostsScreenAction.ClickBack) }
             )
         }

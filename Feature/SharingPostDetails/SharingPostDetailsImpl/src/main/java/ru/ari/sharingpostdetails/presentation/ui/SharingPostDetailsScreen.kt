@@ -28,8 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,18 +51,16 @@ import ru.ari.sharingpostdetails.presentation.models.ReservationStatusUi
 @Composable
 internal fun SharingPostDetailsScreen(
     uiState: SharingPostDetailsUiState,
-    snackbarHostState: SnackbarHostState,
     onAction: (SharingPostDetailsUiAction) -> Unit,
     onBackClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
             WiseDubsTopAppBar(
-                title = "Бронирование",
+                title = "Просмотр объявления",
                 onBackClick = onBackClick
             )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        }
     ) { innerPadding ->
         when (uiState) {
             SharingPostDetailsUiState.Loading -> {

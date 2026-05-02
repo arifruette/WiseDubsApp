@@ -1,6 +1,5 @@
 package ru.ari.profile.navigation
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -9,9 +8,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import javax.inject.Inject
+import ru.ari.composelib.LocalAppMessageHost
 import ru.ari.auth.common.api.di.AuthCommonApi
 import ru.ari.composelib.LocalPostLoginNavigator
-import ru.ari.composelib.LocalRootNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.composelib.di.utils.rememberScopedComponent
 import ru.ari.di.deps
@@ -20,7 +19,6 @@ import ru.ari.navigation.di.RouteEntryProvider
 import ru.ari.posts.api.di.PostsApi
 import ru.ari.profile.di.component.DaggerProfileComponent
 import ru.ari.profile.di.component.ProfileComponent
-import ru.ari.profile.presentation.contract.ProfileScreenAction
 import ru.ari.profile.presentation.contract.ProfileScreenUiEffect
 import ru.ari.profile.presentation.contract.ReservedPostsScreenAction
 import ru.ari.profile.presentation.contract.ReservedPostsScreenUiEffect
@@ -68,28 +66,19 @@ private fun rememberProfileComponent(): ProfileComponent {
 private fun ProfileScreenNavigationRoute(
     viewModel: ProfileViewModel
 ) {
-    val context = LocalContext.current
-    val rootNavigator = LocalRootNavigator.current
+    val appMessageHost = LocalAppMessageHost.current
     val postLoginNavigator = LocalPostLoginNavigator.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {
-        viewModel.onAction(ProfileScreenAction.Load)
-    }
-
-    LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                ProfileScreenUiEffect.NavigateToLogin -> {
-                    rootNavigator.navigate(Route.PreLogin)
-                }
-
                 ProfileScreenUiEffect.OpenReservedPosts -> {
                     postLoginNavigator.navigate(Route.PostLogin.ReservedPostsScreenRoute)
                 }
 
                 is ProfileScreenUiEffect.ShowError -> {
-                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                    appMessageHost.showMessage(effect.message)
                 }
             }
         }

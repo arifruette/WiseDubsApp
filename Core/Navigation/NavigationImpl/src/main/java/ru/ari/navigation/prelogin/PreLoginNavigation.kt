@@ -1,9 +1,15 @@
 package ru.ari.navigation.prelogin
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -24,6 +30,7 @@ val PRE_LOGIN_ROUTES = persistentListOf(
 @Composable
 fun PreLoginNavigation(
     preLoginRoutes: ImmutableList<RouteEntryProvider>,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
     val preLoginNavigationState = rememberNavigationState(
@@ -43,10 +50,16 @@ fun PreLoginNavigation(
                 }
             }
         }
-        NavDisplay(
-            entries = preLoginNavigationState.toEntries(entryProvider),
+        Scaffold(
             modifier = modifier,
-            onBack = preLoginNavigator::goBack
-        )
+            contentWindowInsets = WindowInsets(0.dp),
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        ) { innerPadding ->
+            NavDisplay(
+                entries = preLoginNavigationState.toEntries(entryProvider),
+                modifier = Modifier.padding(innerPadding),
+                onBack = preLoginNavigator::goBack
+            )
+        }
     }
 }

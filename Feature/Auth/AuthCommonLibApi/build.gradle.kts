@@ -32,6 +32,7 @@ android {
 dependencies {
     api(projects.networkLibApi)
 
+    api(libs.androidx.core.ktx)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
 }
