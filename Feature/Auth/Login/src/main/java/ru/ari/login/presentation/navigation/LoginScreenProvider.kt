@@ -1,6 +1,5 @@
 package ru.ari.login.presentation.navigation
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -8,8 +7,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import ru.ari.composelib.LocalAppMessageHost
 import ru.ari.composelib.LocalPreLoginNavigator
-import ru.ari.composelib.LocalRootNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.composelib.di.utils.rememberScopedComponent
 import ru.ari.di.deps
@@ -42,23 +41,15 @@ class LoginScreenProvider @Inject constructor() : RouteEntryProvider {
 private fun LoginScreenNavigationRoute(
     loginViewModel: LoginViewModel
 ) {
-    val rootNavigator = LocalRootNavigator.current
     val authNavigator = LocalPreLoginNavigator.current
-
-    val context = LocalContext.current
+    val appMessageHost = LocalAppMessageHost.current
 
     LaunchedEffect(Unit) {
         loginViewModel.uiEffect.collect { effect ->
             when (effect) {
-                is LoginScreenUiEffect.ShowError -> Toast.makeText(
-                    context,
-                    effect.message,
-                    Toast.LENGTH_SHORT
-                ).show()
+                is LoginScreenUiEffect.ShowError -> appMessageHost.showMessage(effect.message)
 
-                is LoginScreenUiEffect.NavigateToMainScreen -> {
-                    rootNavigator.navigate(Route.PostLogin)
-                }
+                is LoginScreenUiEffect.NavigateToMainScreen -> Unit
 
                 is LoginScreenUiEffect.NavigateToRegistrationScreen -> {
                     authNavigator.navigate(Route.PreLogin.RegistrationScreenRoute)

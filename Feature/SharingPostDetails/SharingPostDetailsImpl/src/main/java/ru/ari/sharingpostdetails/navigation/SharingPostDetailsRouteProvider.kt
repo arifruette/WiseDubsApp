@@ -2,12 +2,9 @@ package ru.ari.sharingpostdetails.navigation
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,6 +12,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import javax.inject.Inject
 import ru.ari.cache.di.CacheApi
+import ru.ari.composelib.LocalAppMessageHost
 import ru.ari.composelib.LocalPostLoginNavigator
 import ru.ari.composelib.daggerViewModel
 import ru.ari.composelib.di.utils.rememberScopedComponent
@@ -60,7 +58,7 @@ private fun SharingPostDetailsNavigationRoute(
 ) {
     val context = LocalContext.current
     val navigator = LocalPostLoginNavigator.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val appMessageHost = LocalAppMessageHost.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(postId, autoReserve, viewModel) {
@@ -76,18 +74,18 @@ private fun SharingPostDetailsNavigationRoute(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is SharingPostDetailsUiEffect.ShowMessage -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                    appMessageHost.showMessage(effect.message)
                 }
 
                 is SharingPostDetailsUiEffect.CloseWithError -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                    appMessageHost.showMessage(effect.message)
                     navigator.goBack()
                 }
 
                 is SharingPostDetailsUiEffect.OpenTelegram -> {
                     val opened = openTelegram(context = context, telegramId = effect.telegramId)
                     if (!opened) {
-                        snackbarHostState.showSnackbar("Не удалось открыть Telegram")
+                        appMessageHost.showMessage("Не удалось открыть Telegram")
                     }
                 }
             }
@@ -96,7 +94,6 @@ private fun SharingPostDetailsNavigationRoute(
 
     SharingPostDetailsScreen(
         uiState = uiState,
-        snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction,
         onBackClick = navigator::goBack
     )

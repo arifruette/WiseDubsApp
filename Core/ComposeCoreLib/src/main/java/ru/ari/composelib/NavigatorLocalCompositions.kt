@@ -14,3 +14,11 @@ val LocalPreLoginNavigator = staticCompositionLocalOf<Navigator> {
 val LocalPostLoginNavigator = staticCompositionLocalOf<Navigator> {
     error("PostLogin navigator wasn't provided")
 }
+
+fun interface AppMessageHost {
+    suspend fun showMessage(message: String)
+}
+
+val LocalAppMessageHost = staticCompositionLocalOf<AppMessageHost> {
+    error("App message host wasn't provided")
+}

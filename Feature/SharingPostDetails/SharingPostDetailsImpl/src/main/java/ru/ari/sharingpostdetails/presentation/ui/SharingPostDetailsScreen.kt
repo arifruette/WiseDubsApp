@@ -24,17 +24,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,34 +42,25 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import kotlinx.collections.immutable.ImmutableList
+import ru.ari.designsystem.components.WiseDubsTopAppBar
 import ru.ari.sharingpostdetails.presentation.contract.SharingPostDetailsUiAction
 import ru.ari.sharingpostdetails.presentation.contract.SharingPostDetailsUiState
 import ru.ari.sharingpostdetails.presentation.models.PostDetailsImageUiModel
 import ru.ari.sharingpostdetails.presentation.models.ReservationStatusUi
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SharingPostDetailsScreen(
     uiState: SharingPostDetailsUiState,
-    snackbarHostState: SnackbarHostState,
     onAction: (SharingPostDetailsUiAction) -> Unit,
     onBackClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Бронирование") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад"
-                        )
-                    }
-                }
+            WiseDubsTopAppBar(
+                title = "Просмотр объявления",
+                onBackClick = onBackClick
             )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        }
     ) { innerPadding ->
         when (uiState) {
             SharingPostDetailsUiState.Loading -> {

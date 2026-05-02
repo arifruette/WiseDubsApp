@@ -22,11 +22,12 @@ class SessionDataStoreHelperImpl @Inject constructor(
             putString(KEY_TOKEN, sessionState.token)
                 .putString(KEY_USER_LOGIN, sessionState.userLogin)
                 .putLong(KEY_USER_ID, sessionState.userId ?: NO_USER_ID)
+                .putString(KEY_USER_TELEGRAM_ID, sessionState.userTelegramId)
         }
         this.sessionState.value = sessionState
     }
 
-    override suspend fun getSessionState(): Flow<SessionState?> = sessionState.asStateFlow()
+    override fun getSessionState(): Flow<SessionState?> = sessionState.asStateFlow()
 
     override suspend fun eraseSessionState() {
         sharedPreferences.edit { clear() }
@@ -37,11 +38,13 @@ class SessionDataStoreHelperImpl @Inject constructor(
         val token = sharedPreferences.getString(KEY_TOKEN, null) ?: return null
         val userLogin = sharedPreferences.getString(KEY_USER_LOGIN, null) ?: return null
         val rawUserId = sharedPreferences.getLong(KEY_USER_ID, NO_USER_ID)
+        val userTelegramId = sharedPreferences.getString(KEY_USER_TELEGRAM_ID, null)
 
         return SessionState(
             token = token,
             userLogin = userLogin,
-            userId = rawUserId.takeUnless { it == NO_USER_ID }
+            userId = rawUserId.takeUnless { it == NO_USER_ID },
+            userTelegramId = userTelegramId
         )
     }
 
@@ -50,6 +53,7 @@ class SessionDataStoreHelperImpl @Inject constructor(
         private const val KEY_TOKEN = "token"
         private const val KEY_USER_LOGIN = "user_login"
         private const val KEY_USER_ID = "user_id"
+        private const val KEY_USER_TELEGRAM_ID = "user_telegram_id"
         private const val NO_USER_ID = Long.MIN_VALUE
     }
 }

@@ -1,16 +1,21 @@
 package ru.ari.navigation.postlogin
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -49,12 +54,16 @@ private val POST_LOGIN_TOP_LEVEL_ROUTES = mapOf(
 @Composable
 fun PostLoginNavigation(
     postLoginRoutes: ImmutableList<RouteEntryProvider>,
+    navigationResetKey: String,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
-    val postLoginNavigationState = rememberNavigationState(
-        startRoute = Route.PostLogin.SharingScreenRoute,
-        topLevelRoutes = POST_LOGIN_ROUTES
-    )
+    val postLoginNavigationState = key(navigationResetKey) {
+        rememberNavigationState(
+            startRoute = Route.PostLogin.SharingScreenRoute,
+            topLevelRoutes = POST_LOGIN_ROUTES
+        )
+    }
     val postLoginNavigator = remember(postLoginNavigationState) {
         BaseNavigatorImpl(postLoginNavigationState)
     }
@@ -62,9 +71,6 @@ fun PostLoginNavigation(
         LocalPostLoginNavigator provides postLoginNavigator
     ) {
         val entryProvider = entryProvider {
-            entry<Route.PostLogin.ProfileScreenRoute> {
-                Text(text = "Экран профиля")
-            }
             postLoginRoutes.fastForEach { routeProvider ->
                 with(routeProvider) {
                     provideRoute()
@@ -73,6 +79,8 @@ fun PostLoginNavigation(
         }
         Scaffold(
             modifier = modifier,
+            contentWindowInsets = WindowInsets(0.dp),
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
                 NavigationBar {
                     POST_LOGIN_TOP_LEVEL_ROUTES.forEach { (key, value) ->

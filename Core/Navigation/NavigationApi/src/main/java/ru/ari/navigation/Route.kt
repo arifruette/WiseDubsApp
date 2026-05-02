@@ -44,6 +44,9 @@ sealed interface Route : NavKey {
 
         @Serializable
         data object ProfileScreenRoute : Route
+
+        @Serializable
+        data object ReservedPostsScreenRoute : Route
     }
 
 }
