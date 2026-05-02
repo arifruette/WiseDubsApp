@@ -1,10 +1,14 @@
 package ru.ari.myposts.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -47,13 +51,25 @@ private fun MyPostsScreenRoute(
 ) {
     val appMessageHost = LocalAppMessageHost.current
     val navigator = LocalPostLoginNavigator.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val actionHandler = remember(viewModel) {
         MyPostsActionHandler(viewModel::onAction)
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.onAction(MyPostsScreenAction.Load)
+    DisposableEffect(lifecycleOwner, viewModel) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.onAction(MyPostsScreenAction.Load)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is MyPostsScreenUiEffect.ShowError -> {

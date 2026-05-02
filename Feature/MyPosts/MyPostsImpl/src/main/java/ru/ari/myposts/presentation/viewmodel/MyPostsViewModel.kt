@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -38,16 +39,24 @@ class MyPostsViewModel @Inject constructor(
     private var allPosts: ImmutableList<MyPostUiModel> = persistentListOf()
     private var updatingPostIds: Set<Long> = emptySet()
     private var hasLoaded = false
+    private var refreshJob: Job? = null
+
+    init {
+        observePosts()
+    }
 
     fun onAction(action: MyPostsScreenAction) {
         when (action) {
-            MyPostsScreenAction.Load -> {
-                if (!hasLoaded) {
-                    loadPosts(forceRefresh = false)
-                }
-            }
+            MyPostsScreenAction.Load -> loadPosts(
+                forceRefresh = hasLoaded,
+                showRefreshIndicator = false
+            )
 
-            MyPostsScreenAction.Refresh -> loadPosts(forceRefresh = true)
+            MyPostsScreenAction.Refresh -> loadPosts(
+                forceRefresh = true,
+                showRefreshIndicator = true
+            )
+
             MyPostsScreenAction.ClickCreate -> emitEffect(MyPostsScreenUiEffect.OpenCreatePost)
             is MyPostsScreenAction.ClickPost ->
                 emitEffect(MyPostsScreenUiEffect.OpenEditPost(action.postId))
@@ -62,43 +71,67 @@ class MyPostsViewModel @Inject constructor(
         }
     }
 
-    private fun loadPosts(forceRefresh: Boolean) {
+    private fun observePosts() {
+        viewModelScope.launch {
+            postsInteractor.observeMyPosts().collect { posts ->
+                allPosts = myPostsUiMapper.map(posts).applyArchiveActionAvailability()
+                if (allPosts.isEmpty() && !hasLoaded && _uiState.value is MyPostsScreenUiState.Loading) {
+                    return@collect
+                }
+                publishState(
+                    selectedTab = _uiState.value.selectedTab,
+                    isRefreshing = currentRefreshState()
+                )
+            }
+        }
+    }
+
+    private fun loadPosts(
+        forceRefresh: Boolean,
+        showRefreshIndicator: Boolean
+    ) {
         val selectedTab = _uiState.value.selectedTab
-        if (forceRefresh) {
+        if (showRefreshIndicator) {
             _uiState.update { current ->
                 when (current) {
                     is MyPostsScreenUiState.Content -> current.copy(isRefreshing = true)
-                    is MyPostsScreenUiState.Empty -> MyPostsScreenUiState.Loading(selectedTab)
+                    is MyPostsScreenUiState.Empty -> current
                     is MyPostsScreenUiState.Loading -> current
                 }
             }
-        } else {
+        } else if (!hasLoaded && allPosts.isEmpty()) {
             _uiState.value = MyPostsScreenUiState.Loading(selectedTab)
         }
 
-        viewModelScope.launch {
-            when (val result = postsInteractor.getMyPosts(forceRefresh)) {
-                is Result.Success -> {
-                    hasLoaded = true
-                    allPosts = myPostsUiMapper.map(result.data).applyArchiveActionAvailability()
-                    publishState(selectedTab = selectedTab, isRefreshing = false)
-                }
+        if (refreshJob?.isActive == true) return
 
-                is Result.Error -> {
-                    publishFailure(
-                        selectedTab = selectedTab,
-                        isRefreshing = forceRefresh,
-                        message = result.message
-                    )
-                }
+        refreshJob = viewModelScope.launch {
+            try {
+                when (val result = postsInteractor.getMyPosts(forceRefresh)) {
+                    is Result.Success -> {
+                        hasLoaded = true
+                        allPosts = myPostsUiMapper.map(result.data).applyArchiveActionAvailability()
+                        publishState(selectedTab = selectedTab, isRefreshing = false)
+                    }
 
-                is Result.Exception -> {
-                    publishFailure(
-                        selectedTab = selectedTab,
-                        isRefreshing = forceRefresh,
-                        message = result.error.message ?: "Непредвиденная ошибка"
-                    )
+                    is Result.Error -> {
+                        publishFailure(
+                            selectedTab = selectedTab,
+                            isRefreshing = showRefreshIndicator,
+                            message = result.message
+                        )
+                    }
+
+                    is Result.Exception -> {
+                        publishFailure(
+                            selectedTab = selectedTab,
+                            isRefreshing = showRefreshIndicator,
+                            message = result.error.message ?: "Непредвиденная ошибка"
+                        )
+                    }
                 }
+            } finally {
+                refreshJob = null
             }
         }
     }
@@ -111,7 +144,7 @@ class MyPostsViewModel @Inject constructor(
         val selectedTab = _uiState.value.selectedTab
         updatingPostIds += postId
         allPosts = allPosts.applyArchiveActionAvailability()
-        publishState(selectedTab = selectedTab, isRefreshing = false)
+        publishState(selectedTab = selectedTab, isRefreshing = currentRefreshState())
 
         viewModelScope.launch {
             when (val result = postsInteractor.setPostActive(id = postId, isActive = targetIsActive)) {
@@ -120,20 +153,20 @@ class MyPostsViewModel @Inject constructor(
                         post = myPostsUiMapper.map(result.data)
                     ).applyArchiveActionAvailability(excluding = postId)
                     updatingPostIds -= postId
-                    publishState(selectedTab = selectedTab, isRefreshing = false)
+                    publishState(selectedTab = selectedTab, isRefreshing = currentRefreshState())
                 }
 
                 is Result.Error -> {
                     updatingPostIds -= postId
                     allPosts = allPosts.applyArchiveActionAvailability()
-                    publishState(selectedTab = selectedTab, isRefreshing = false)
+                    publishState(selectedTab = selectedTab, isRefreshing = currentRefreshState())
                     emitEffect(MyPostsScreenUiEffect.ShowError(result.message))
                 }
 
                 is Result.Exception -> {
                     updatingPostIds -= postId
                     allPosts = allPosts.applyArchiveActionAvailability()
-                    publishState(selectedTab = selectedTab, isRefreshing = false)
+                    publishState(selectedTab = selectedTab, isRefreshing = currentRefreshState())
                     emitEffect(
                         MyPostsScreenUiEffect.ShowError(
                             result.error.message ?: "Непредвиденная ошибка"
@@ -164,7 +197,7 @@ class MyPostsViewModel @Inject constructor(
 
             is MyPostsScreenUiState.Empty,
             is MyPostsScreenUiState.Content -> {
-                publishState(selectedTab = tab, isRefreshing = false)
+                publishState(selectedTab = tab, isRefreshing = currentRefreshState())
             }
         }
     }
@@ -180,6 +213,12 @@ class MyPostsViewModel @Inject constructor(
                 isRefreshing = isRefreshing
             )
         }
+    }
+
+    private fun currentRefreshState(): Boolean = when (val state = _uiState.value) {
+        is MyPostsScreenUiState.Content -> state.isRefreshing
+        is MyPostsScreenUiState.Loading -> false
+        is MyPostsScreenUiState.Empty -> false
     }
 
     private fun ImmutableList<MyPostUiModel>.filtered(tab: MyPostsTab): ImmutableList<MyPostUiModel> =
