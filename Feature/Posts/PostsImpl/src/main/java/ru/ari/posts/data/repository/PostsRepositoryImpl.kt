@@ -130,7 +130,7 @@ class PostsRepositoryImpl @Inject constructor(
             val baseUrl = authRetrofit.baseUrl().toString()
             val updatedPost = postsRemoteApi.setPostActive(
                 id = id,
-                isActive = isActive.toString()
+                isActive = isActive.toPart()
             ).toDomain(baseUrl)
 
             updatePostInExistingScopes(updatedPost)
@@ -148,7 +148,9 @@ class PostsRepositoryImpl @Inject constructor(
     ): Result<List<Post>> {
         return try {
             val baseUrl = authRetrofit.baseUrl().toString()
-            val remotePosts = remoteCall().map { it.toDomain(baseUrl) }
+            val remotePosts = remoteCall()
+                .map { it.toDomain(baseUrl) }
+                .sortedByCreatedAtDesc()
             postDataSource.savePosts(scope, remotePosts.map { it.toCacheModel() })
             Result.Success(remotePosts)
         } catch (e: HttpException) {
@@ -217,6 +219,12 @@ class PostsRepositoryImpl @Inject constructor(
         postDataSource.savePosts(scope = scope, posts = updatedPosts)
     }
 
+    private fun List<Post>.sortedByCreatedAtDesc(): List<Post> =
+        sortedWith(
+            compareByDescending<Post> { it.createdAt }
+                .thenByDescending { it.id }
+        )
+
     private fun HttpException.toResultError(): Result.Error {
         val detail = response()
             ?.errorBody()
@@ -234,6 +242,8 @@ class PostsRepositoryImpl @Inject constructor(
         runCatching { JSONObject(body).optString("detail") }.getOrNull()
 
     private fun String.toPart(): RequestBody = RequestBody.create(MultipartBody.FORM, this)
+
+    private fun Boolean.toPart(): RequestBody = RequestBody.create(MultipartBody.FORM, toString())
 
     private fun String?.toNullablePart(): RequestBody? =
         this?.let { value -> RequestBody.create(MultipartBody.FORM, value) }

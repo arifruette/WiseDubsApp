@@ -53,7 +53,7 @@ interface PostsRemoteApi {
     @PATCH("sharing/posts/{id}")
     suspend fun setPostActive(
         @Path("id") id: Long,
-        @Part("is_active") isActive: String
+        @Part("is_active") isActive: RequestBody
     ): PostResponse
 
     @Multipart

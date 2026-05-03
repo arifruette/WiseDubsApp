@@ -18,11 +18,11 @@ interface PostDao {
     suspend fun insertPostImages(images: List<CachedPostImageEntity>)
 
     @Transaction
-    @Query("SELECT * FROM cached_posts WHERE scope = :scope")
+    @Query("SELECT * FROM cached_posts WHERE scope = :scope ORDER BY createdAt DESC, postId DESC")
     fun observePosts(scope: String): kotlinx.coroutines.flow.Flow<List<CachedPostWithImages>>
 
     @Transaction
-    @Query("SELECT * FROM cached_posts WHERE scope = :scope")
+    @Query("SELECT * FROM cached_posts WHERE scope = :scope ORDER BY createdAt DESC, postId DESC")
     suspend fun getPostsSync(scope: String): List<CachedPostWithImages>
 
     @Transaction
