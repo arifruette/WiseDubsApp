@@ -48,6 +48,7 @@ include(":ManagePostImpl")
 include(":SharingPostDetailsApi")
 include(":SharingPostDetailsImpl")
 include(":ProfileImpl")
+include(":BookingImpl")
 
 project(":NavigationApi").projectDir = file("Core/Navigation/NavigationApi")
 project(":NavigationImpl").projectDir = file("Core/Navigation/NavigationImpl")
@@ -73,3 +74,4 @@ project(":ManagePostImpl").projectDir = file("Feature/ManagePost/ManagePostImpl"
 project(":SharingPostDetailsApi").projectDir = file("Feature/SharingPostDetails/SharingPostDetailsApi")
 project(":SharingPostDetailsImpl").projectDir = file("Feature/SharingPostDetails/SharingPostDetailsImpl")
 project(":ProfileImpl").projectDir = file("Feature/Profile/ProfileImpl")
+project(":BookingImpl").projectDir = file("Feature/Booking/BookingImpl")
