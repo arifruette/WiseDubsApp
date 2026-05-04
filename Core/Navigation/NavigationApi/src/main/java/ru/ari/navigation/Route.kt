@@ -25,6 +25,9 @@ sealed interface Route : NavKey {
         data object SharingScreenRoute : Route
 
         @Serializable
+        data object BookingScreenRoute : Route
+
+        @Serializable
         data class SharingPostDetailsRoute(
             val postId: Long,
             val autoReserve: Boolean = false

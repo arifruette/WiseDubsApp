@@ -32,6 +32,7 @@ import ru.ari.navigation.toEntries
 
 val POST_LOGIN_ROUTES = persistentListOf(
     Route.PostLogin.SharingScreenRoute,
+    Route.PostLogin.BookingScreenRoute,
     Route.PostLogin.PostsScreenRoute,
     Route.PostLogin.ProfileScreenRoute
 )
@@ -39,15 +40,19 @@ val POST_LOGIN_ROUTES = persistentListOf(
 private val POST_LOGIN_TOP_LEVEL_ROUTES = mapOf(
     Route.PostLogin.SharingScreenRoute to NavBarItem(
         iconRes = R.drawable.menu,
-        label = "Sharing"
+        label = "Шеринг"
+    ),
+    Route.PostLogin.BookingScreenRoute to NavBarItem(
+        iconRes = R.drawable.posts_icon,
+        label = "Бронь"
     ),
     Route.PostLogin.PostsScreenRoute to NavBarItem(
         iconRes = R.drawable.post,
-        label = "Posts"
+        label = "Посты"
     ),
     Route.PostLogin.ProfileScreenRoute to NavBarItem(
         iconRes = R.drawable.account,
-        label = "Profile"
+        label = "Профиль"
     )
 )
 
