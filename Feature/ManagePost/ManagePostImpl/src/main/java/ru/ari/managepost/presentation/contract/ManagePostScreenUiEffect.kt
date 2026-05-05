@@ -9,7 +9,7 @@ sealed interface ManagePostScreenUiEffect {
     data class ShowError(val message: String) : ManagePostScreenUiEffect
 
     @Immutable
-    data object Completed : ManagePostScreenUiEffect
+    data class Completed(val isCreate: Boolean) : ManagePostScreenUiEffect
 
     @Immutable
     data class NavigateToAddressManage(val locationId: Int? = null) : ManagePostScreenUiEffect

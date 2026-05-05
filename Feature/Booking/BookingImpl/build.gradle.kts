@@ -39,6 +39,7 @@ dependencies {
     implementation(projects.composeCoreLib)
     implementation(projects.designSystemCoreLib)
     implementation(projects.networkLibApi)
+    implementation(projects.cacheLibApi)
 
     implementation(libs.retrofit)
     implementation(libs.converter.gson)

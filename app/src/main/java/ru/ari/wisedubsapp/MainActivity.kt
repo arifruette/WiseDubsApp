@@ -9,10 +9,12 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 import ru.ari.composelib.AppMessageHost
 import ru.ari.composelib.LocalAppMessageHost
 import ru.ari.designsystem.theme.WiseDubsAppTheme
@@ -52,9 +54,12 @@ class MainActivity : ComponentActivity() {
                     val computedState = startRouteState as StartRouteState.Computed
                     WiseDubsAppTheme {
                         val snackbarHostState = remember { SnackbarHostState() }
-                        val appMessageHost = remember(snackbarHostState) {
+                        val appMessageScope = rememberCoroutineScope()
+                        val appMessageHost = remember(snackbarHostState, appMessageScope) {
                             AppMessageHost { message ->
-                                snackbarHostState.showSnackbar(message)
+                                appMessageScope.launch {
+                                    snackbarHostState.showSnackbar(message)
+                                }
                             }
                         }
                         CompositionLocalProvider(

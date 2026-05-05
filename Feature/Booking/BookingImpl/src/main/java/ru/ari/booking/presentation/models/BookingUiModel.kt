@@ -7,5 +7,7 @@ data class BookingUiModel(
     val id: Long,
     val intervalText: String,
     val description: String,
-    val roomName: String
+    val roomName: String,
+    val authorTelegramId: String,
+    val isMine: Boolean
 )
