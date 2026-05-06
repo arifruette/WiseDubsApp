@@ -1,23 +1,21 @@
 package ru.ari.booking.presentation.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
@@ -29,7 +27,7 @@ fun BookingsSection(
     loadState: BookingPostsLoadState,
     bookings: ImmutableList<BookingUiModel>,
     hasSelectedRoom: Boolean,
-    onRetryClick: () -> Unit,
+    onBookingClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -38,40 +36,33 @@ fun BookingsSection(
     ) {
         when (loadState) {
             BookingPostsLoadState.Idle -> StatusSurface(
-                title = if (hasSelectedRoom) "Заполните интервал" else "Выберите комнату",
-                subtitle = "После выбора комнаты и времени здесь появятся брони."
+                title = if (hasSelectedRoom) "Выберите дату" else "Выберите комнату",
+                subtitle = "После выбора комнаты здесь появятся брони за день."
             )
-
             BookingPostsLoadState.Loading -> StatusSurface(
                 title = "Загружаем занятость",
-                subtitle = "Проверяем выбранный интервал.",
+                subtitle = "Проверяем выбранный день.",
                 trailing = {
                     CircularProgressIndicator(
-                        modifier = Modifier.height(20.dp),
+                        modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp
                     )
                 }
             )
-
             BookingPostsLoadState.Empty -> StatusSurface(
                 title = "Свободно",
-                subtitle = "Для выбранного интервала брони не найдены."
+                subtitle = "На выбранный день брони не найдены."
             )
-
             is BookingPostsLoadState.Error -> StatusSurface(
                 title = "Не удалось загрузить занятость",
-                subtitle = loadState.message,
-                trailing = {
-                    TextButton(onClick = onRetryClick) {
-                        Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null)
-                        Text("Повторить")
-                    }
-                }
+                subtitle = loadState.message
             )
-
             BookingPostsLoadState.Content -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 bookings.forEach { booking ->
-                    BookingItem(booking = booking)
+                    BookingItem(
+                        booking = booking,
+                        onClick = { onBookingClick(booking.id) }
+                    )
                 }
             }
         }
@@ -81,28 +72,82 @@ fun BookingsSection(
 @Composable
 private fun BookingItem(
     booking: BookingUiModel,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val backgroundColor = if (booking.isMine) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    }
+    val contentModifier = if (booking.isMine) {
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+    } else {
+        modifier.fillMaxWidth()
+    }
+
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        modifier = contentModifier,
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = booking.intervalText,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (booking.isMine) {
+                    MineBadge()
+                }
+            }
             Text(
-                text = booking.intervalText,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
+                text = booking.roomName,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
             )
             Text(
                 text = booking.description,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Text(
+                text = "Автор: ${booking.authorTelegramId}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+    }
+}
+
+@Composable
+private fun MineBadge(
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.primary
+    ) {
+        Text(
+            text = "моя",
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 

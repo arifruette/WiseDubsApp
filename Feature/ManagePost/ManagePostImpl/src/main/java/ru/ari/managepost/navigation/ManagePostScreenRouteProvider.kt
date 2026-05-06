@@ -123,7 +123,13 @@ private fun ManagePostNavigationRoute(
     LaunchedEffect(viewModel) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                ManagePostScreenUiEffect.Completed -> navigator.goBack()
+                is ManagePostScreenUiEffect.Completed -> {
+                    if (effect.isCreate) {
+                        navigator.replaceStack(Route.PostLogin.BookingScreenRoute)
+                    } else {
+                        navigator.goBack()
+                    }
+                }
                 is ManagePostScreenUiEffect.ShowError -> {
                     appMessageHost.showMessage(effect.message)
                 }

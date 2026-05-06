@@ -4,7 +4,6 @@ package ru.ari.booking.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ari.booking.domain.interactor.BookingInteractor
 import ru.ari.booking.domain.models.Booking
-import ru.ari.booking.domain.models.CreateBookingParams
 import ru.ari.booking.domain.models.GroupedRooms
 import ru.ari.booking.presentation.contract.BookingScreenAction
 import ru.ari.booking.presentation.contract.BookingScreenUiEffect
@@ -34,7 +32,6 @@ import ru.ari.booking.presentation.models.BookingRoomGroupUiModel
 import ru.ari.booking.presentation.models.BookingRoomSheetStep
 import ru.ari.booking.presentation.models.BookingRoomUiModel
 import ru.ari.booking.presentation.models.BookingRoomsLoadState
-import ru.ari.booking.presentation.models.BookingTimeMode
 import ru.ari.booking.presentation.models.BookingUiModel
 import ru.ari.network.domain.models.Result
 import kotlin.time.Instant
@@ -45,23 +42,8 @@ class BookingViewModel @Inject constructor(
     private val bookingInteractor: BookingInteractor
 ) : ViewModel() {
 
-    private val initialStartDateTime = LocalDateTime.of(
-        LocalDate.now(),
-        LocalTime.now()
-            .plusHours(1)
-            .withMinute(0)
-            .withSecond(0)
-            .withNano(0)
-    )
-    private val initialEndDateTime = initialStartDateTime.plusHours(1)
-
     private val _uiState = MutableStateFlow(
-        BookingScreenUiState(
-            selectedDate = initialStartDateTime.toLocalDate().format(DATE_FORMATTER),
-            startTime = initialStartDateTime.toLocalTime().format(TIME_FORMATTER),
-            endDate = initialEndDateTime.toLocalDate().format(DATE_FORMATTER),
-            endTime = initialEndDateTime.toLocalTime().format(TIME_FORMATTER)
-        )
+        BookingScreenUiState(selectedDate = LocalDate.now().format(DATE_FORMATTER))
     )
     val uiState: StateFlow<BookingScreenUiState> = _uiState.asStateFlow()
 
@@ -69,108 +51,91 @@ class BookingViewModel @Inject constructor(
     val uiEffect: SharedFlow<BookingScreenUiEffect> = _uiEffect.asSharedFlow()
 
     private var roomsLoaded = false
-    private var bookingsLoadJob: Job? = null
-    private var bookingsRequestId = 0L
+    private var observeBookingsJob: Job? = null
+    private var refreshBookingsJob: Job? = null
+    private var observedScope: Pair<Int, String>? = null
 
     fun onAction(action: BookingScreenAction) {
         when (action) {
             BookingScreenAction.Load -> {
-                if (!roomsLoaded) {
-                    loadRooms()
-                }
+                if (!roomsLoaded) loadRooms()
+                observeAndRefreshBookings(userInitiated = false)
             }
-
+            BookingScreenAction.Refresh -> refreshCurrentScreen()
             BookingScreenAction.RetryRooms -> loadRooms()
-            BookingScreenAction.RetryBookings -> refreshBookings()
+            BookingScreenAction.RetryBookings -> observeAndRefreshBookings(userInitiated = true)
             BookingScreenAction.OpenCorpusSelector -> {
                 if (_uiState.value.roomsLoadState == BookingRoomsLoadState.Content) {
                     _uiState.update { it.copy(activeRoomSheet = BookingRoomSheetStep.Corpus) }
                 }
             }
-
             BookingScreenAction.OpenRoomSelector -> {
                 val state = _uiState.value
-                if (
-                    state.roomsLoadState == BookingRoomsLoadState.Content &&
-                    state.selectedCorpus.isNotBlank()
-                ) {
+                if (state.roomsLoadState == BookingRoomsLoadState.Content && state.selectedCorpus.isNotBlank()) {
                     _uiState.update { it.copy(activeRoomSheet = BookingRoomSheetStep.Room) }
                 }
             }
-
             BookingScreenAction.DismissRoomSelector -> {
                 _uiState.update { it.copy(activeRoomSheet = BookingRoomSheetStep.None) }
             }
-
             is BookingScreenAction.SelectCorpus -> {
                 _uiState.update { state ->
                     state.copy(
                         selectedCorpus = action.corpus,
                         selectedRoom = null,
                         roomSearchQuery = "",
-                        activeRoomSheet = BookingRoomSheetStep.None
-                    ).withoutBookings()
-                }
-            }
-
-            is BookingScreenAction.SelectRoom -> {
-                _uiState.update {
-                    it.copy(
-                        selectedRoom = action.room,
-                        activeRoomSheet = BookingRoomSheetStep.None
+                        activeRoomSheet = BookingRoomSheetStep.None,
+                        bookingsLoadState = BookingPostsLoadState.Idle,
+                        bookings = emptyList<BookingUiModel>().toImmutableList()
                     )
                 }
-                refreshBookings()
+                observeBookingsJob?.cancel()
+                observedScope = null
             }
-
+            is BookingScreenAction.SelectRoom -> {
+                _uiState.update {
+                    it.copy(selectedRoom = action.room, activeRoomSheet = BookingRoomSheetStep.None)
+                }
+                observeAndRefreshBookings(userInitiated = false)
+            }
             is BookingScreenAction.ChangeRoomSearchQuery -> {
                 _uiState.update { it.copy(roomSearchQuery = action.value.take(40)) }
             }
-
             is BookingScreenAction.ChangeDate -> {
-                updateStartDate(action.value.take(DATE_INPUT_LENGTH))
-                refreshBookingsIfPossible()
+                _uiState.update { it.copy(selectedDate = action.value.take(DATE_INPUT_LENGTH)) }
+                observeAndRefreshBookings(userInitiated = false)
             }
-
-            is BookingScreenAction.ChangeStartTime -> {
-                updateStartTime(action.value.take(TIME_INPUT_LENGTH))
-                refreshBookingsIfPossible()
+            BookingScreenAction.ClickCreate -> {
+                val state = _uiState.value
+                emitEffect(
+                    BookingScreenUiEffect.OpenBookingForm(
+                        roomId = state.selectedRoom?.id,
+                        date = state.selectedDate.takeIf { it.isNotBlank() }
+                    )
+                )
             }
-
-            is BookingScreenAction.ChangeEndDate -> {
-                _uiState.update { it.copy(endDate = action.value.take(DATE_INPUT_LENGTH)) }
-                refreshBookingsIfPossible()
-            }
-
-            is BookingScreenAction.ChangeEndTime -> {
-                _uiState.update { it.copy(endTime = action.value.take(TIME_INPUT_LENGTH)) }
-                refreshBookingsIfPossible()
-            }
-
-            is BookingScreenAction.ChangeDuration -> {
-                _uiState.update { it.copy(durationMinutes = action.value.filter(Char::isDigit).take(4)) }
-                refreshBookingsIfPossible()
-            }
-
-            is BookingScreenAction.ChangeTimeMode -> {
-                _uiState.update { state ->
-                    state.copy(timeMode = action.mode).ensureValidEndDateTime()
+            is BookingScreenAction.ClickBooking -> {
+                val booking = _uiState.value.bookings.firstOrNull { it.id == action.bookingId }
+                if (booking?.isMine == true) {
+                    emitEffect(BookingScreenUiEffect.OpenEditBooking(action.bookingId))
                 }
-                refreshBookingsIfPossible()
             }
-
-            is BookingScreenAction.ChangeDescription -> {
-                _uiState.update { it.copy(description = action.value.take(200)) }
-            }
-
-            BookingScreenAction.Submit -> submit()
         }
     }
 
-    private fun loadRooms() {
+    private fun refreshCurrentScreen() {
+        if (_uiState.value.selectedRoom == null) {
+            loadRooms(userInitiated = true)
+        } else {
+            observeAndRefreshBookings(userInitiated = true)
+        }
+    }
+
+    private fun loadRooms(userInitiated: Boolean = false) {
         _uiState.update {
             it.copy(
-                roomsLoadState = BookingRoomsLoadState.Loading,
+                roomsLoadState = if (userInitiated && roomsLoaded) it.roomsLoadState else BookingRoomsLoadState.Loading,
+                isRoomsRefreshing = userInitiated,
                 activeRoomSheet = BookingRoomSheetStep.None
             )
         }
@@ -185,258 +150,95 @@ class BookingViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             roomGroups = groups,
-                            roomsLoadState = if (groups.isEmpty()) {
-                                BookingRoomsLoadState.Empty
-                            } else {
-                                BookingRoomsLoadState.Content
-                            }
+                            roomsLoadState = if (groups.isEmpty()) BookingRoomsLoadState.Empty else BookingRoomsLoadState.Content,
+                            isRoomsRefreshing = false
                         )
                     }
                 }
-
-                is Result.Error -> {
-                    _uiState.update {
-                        it.copy(roomsLoadState = BookingRoomsLoadState.Error(result.message))
-                    }
+                is Result.Error -> _uiState.update {
+                    it.copy(roomsLoadState = BookingRoomsLoadState.Error(result.message), isRoomsRefreshing = false)
                 }
-
-                is Result.Exception -> {
-                    _uiState.update {
-                        it.copy(
-                            roomsLoadState = BookingRoomsLoadState.Error(
-                                result.error.message ?: "Не удалось загрузить комнаты"
-                            )
-                        )
-                    }
+                is Result.Exception -> _uiState.update {
+                    it.copy(
+                        roomsLoadState = BookingRoomsLoadState.Error(result.error.message ?: "Не удалось загрузить комнаты"),
+                        isRoomsRefreshing = false
+                    )
                 }
             }
         }
     }
 
-    private fun refreshBookingsIfPossible() {
-        if (_uiState.value.selectedRoom != null) {
-            refreshBookings()
-        }
-    }
-
-    private fun refreshBookings() {
+    private fun observeAndRefreshBookings(userInitiated: Boolean) {
         val state = _uiState.value
-        val room = state.selectedRoom
-        if (room == null) {
-            bookingsLoadJob?.cancel()
-            _uiState.update {
-                it.copy(
-                    bookingsLoadState = BookingPostsLoadState.Idle,
-                    bookings = emptyList<BookingUiModel>().toImmutableList()
-                )
+        val room = state.selectedRoom ?: return
+        val date = state.selectedDate.parseDateOrNull() ?: return
+        val dateKey = date.format(DATE_FORMATTER)
+        val scope = room.id to dateKey
+
+        if (observedScope != scope) {
+            observedScope = scope
+            observeBookingsJob?.cancel()
+            observeBookingsJob = viewModelScope.launch {
+                bookingInteractor.observeBookings(room.id, dateKey).collect { bookings ->
+                    val uiBookings = bookings.sortedBy { it.timeStart }.map { it.toUiModel() }.toImmutableList()
+                    _uiState.update { current ->
+                        current.copy(
+                            bookings = uiBookings,
+                            bookingsLoadState = when {
+                                uiBookings.isNotEmpty() -> BookingPostsLoadState.Content
+                                current.bookingsLoadState == BookingPostsLoadState.Loading -> BookingPostsLoadState.Loading
+                                else -> BookingPostsLoadState.Empty
+                            },
+                            isBookingsRefreshing = false
+                        )
+                    }
+                }
             }
-            return
-        }
-        val interval = state.toNormalizedInterval()
-        if (interval == null) {
-            bookingsLoadJob?.cancel()
-            _uiState.update {
-                it.copy(
-                    bookingsLoadState = BookingPostsLoadState.Idle,
-                    bookings = emptyList<BookingUiModel>().toImmutableList()
-                )
-            }
-            return
         }
 
-        bookingsLoadJob?.cancel()
-        val requestId = ++bookingsRequestId
-        _uiState.update { it.copy(bookingsLoadState = BookingPostsLoadState.Loading) }
-        bookingsLoadJob = viewModelScope.launch {
+        refreshBookingsJob?.cancel()
+        val hasCache = _uiState.value.bookings.isNotEmpty()
+        _uiState.update {
+            it.copy(
+                bookingsLoadState = if (!hasCache) BookingPostsLoadState.Loading else it.bookingsLoadState,
+                isBookingsRefreshing = userInitiated && hasCache
+            )
+        }
+        refreshBookingsJob = viewModelScope.launch {
+            val interval = date.toDayInterval()
             when (val result = bookingInteractor.getBookings(
                 roomId = room.id,
+                date = dateKey,
                 timeStart = interval.start,
-                timeEnd = interval.end
+                timeEnd = interval.end,
+                forceRefresh = true
             )) {
-                is Result.Success -> {
-                    if (requestId != bookingsRequestId) {
-                        return@launch
-                    }
-                    val bookings = result.data
-                        .sortedBy { it.timeStart }
-                        .map { it.toUiModel() }
-                        .toImmutableList()
-                    _uiState.update {
-                        it.copy(
-                            bookingsLoadState = if (bookings.isEmpty()) {
-                                BookingPostsLoadState.Empty
-                            } else {
-                                BookingPostsLoadState.Content
-                            },
-                            bookings = bookings
-                        )
-                    }
-                }
-
-                is Result.Error -> {
-                    if (requestId != bookingsRequestId) {
-                        return@launch
-                    }
-                    _uiState.update {
-                        it.copy(bookingsLoadState = BookingPostsLoadState.Error(result.message))
-                    }
-                }
-
-                is Result.Exception -> {
-                    if (requestId != bookingsRequestId) {
-                        return@launch
-                    }
-                    _uiState.update {
-                        it.copy(
-                            bookingsLoadState = BookingPostsLoadState.Error(
-                                result.error.message ?: "Не удалось загрузить занятость"
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private fun submit() {
-        val state = _uiState.value
-        val room = state.selectedRoom
-        if (room == null) {
-            emitEffect(BookingScreenUiEffect.ShowMessage("Выберите комнату"))
-            return
-        }
-
-        val interval = state.toNormalizedInterval()
-        if (interval == null) {
-            emitEffect(BookingScreenUiEffect.ShowMessage("Проверьте дату, время и длительность"))
-            return
-        }
-
-        _uiState.update { it.copy(isSubmitting = true) }
-        viewModelScope.launch {
-            val result = bookingInteractor.createBooking(
-                CreateBookingParams(
-                    roomId = room.id,
-                    timeStart = interval.start,
-                    timeEnd = interval.end,
-                    duration = interval.durationMinutes,
-                    description = state.description.trim().ifBlank { null }
+                is Result.Success -> _uiState.update { it.copy(isBookingsRefreshing = false) }
+                is Result.Error -> showBookingsError(result.message, userInitiated)
+                is Result.Exception -> showBookingsError(
+                    result.error.message ?: "Не удалось загрузить занятость",
+                    userInitiated
                 )
+            }
+        }
+    }
+
+    private fun showBookingsError(message: String, userInitiated: Boolean) {
+        val hasContent = _uiState.value.bookings.isNotEmpty()
+        _uiState.update {
+            it.copy(
+                isBookingsRefreshing = false,
+                bookingsLoadState = if (hasContent) it.bookingsLoadState else BookingPostsLoadState.Error(message)
             )
-
-            when (result) {
-                is Result.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false) }
-                    emitEffect(BookingScreenUiEffect.ShowMessage("Бронь создана"))
-                    refreshBookings()
-                }
-
-                is Result.Error -> {
-                    _uiState.update { it.copy(isSubmitting = false) }
-                    emitEffect(
-                        BookingScreenUiEffect.ShowMessage(
-                            if (result.code == 409) {
-                                emitEffect(BookingScreenUiEffect.ScrollToBookings)
-                                "Комната уже занята на выбранное время"
-                            } else {
-                                result.message
-                            }
-                        )
-                    )
-                }
-
-                is Result.Exception -> {
-                    _uiState.update { it.copy(isSubmitting = false) }
-                    emitEffect(
-                        BookingScreenUiEffect.ShowMessage(
-                            result.error.message ?: "Не удалось создать бронь"
-                        )
-                    )
-                }
-            }
         }
-    }
-
-    private fun updateStartDate(value: String) {
-        _uiState.update { state ->
-            state.copy(selectedDate = value.coerceStartDate()).ensureValidEndDateTime()
-        }
-    }
-
-    private fun updateStartTime(value: String) {
-        _uiState.update { state ->
-            state.copy(startTime = value).ensureValidEndDateTime()
-        }
-    }
-
-    private fun BookingScreenUiState.ensureValidEndDateTime(): BookingScreenUiState {
-        if (timeMode != BookingTimeMode.EndTime) {
-            return this
-        }
-
-        val startDate = selectedDate.parseDateOrNull() ?: return this
-        val startTimeValue = startTime.parseTimeOrNull() ?: return this
-        val start = LocalDateTime.of(startDate, startTimeValue)
-        val currentEnd = endDate.parseDateOrNull()
-            ?.let { date ->
-                endTime.parseTimeOrNull()?.let { time -> LocalDateTime.of(date, time) }
-            }
-
-        if (currentEnd != null && currentEnd.isAfter(start)) {
-            return this
-        }
-
-        val nextEnd = start.plusMinutes(DEFAULT_DURATION_MINUTES.toLong())
-        return copy(
-            endDate = nextEnd.toLocalDate().format(DATE_FORMATTER),
-            endTime = nextEnd.toLocalTime().format(TIME_FORMATTER)
-        )
-    }
-
-    private fun BookingScreenUiState.toNormalizedInterval(): NormalizedInterval? {
-        val startDate = selectedDate.parseDateOrNull() ?: return null
-        if (startDate.isBefore(LocalDate.now())) {
-            return null
-        }
-        val start = LocalDateTime.of(startDate, startTime.parseTimeOrNull() ?: return null)
-        val end = when (timeMode) {
-            BookingTimeMode.EndTime -> {
-                val parsedEndDate = endDate.parseDateOrNull() ?: return null
-                LocalDateTime.of(parsedEndDate, endTime.parseTimeOrNull() ?: return null)
-            }
-
-            BookingTimeMode.Duration -> {
-                val minutes = durationMinutes.toIntOrNull()?.takeIf { it > 0 } ?: return null
-                start.plusMinutes(minutes.toLong())
-            }
-        }
-        if (!end.isAfter(start)) {
-            return null
-        }
-        val apiStart = start.toApiInstant()
-        val apiEnd = end.toApiInstant()
-        val duration = Duration.between(apiStart.toJavaInstant(), apiEnd.toJavaInstant()).toMinutes()
-        if (duration <= 0 || duration > Int.MAX_VALUE) {
-            return null
-        }
-        return NormalizedInterval(
-            start = apiStart,
-            end = apiEnd,
-            durationMinutes = duration.toInt()
-        )
+        if (userInitiated || hasContent) emitEffect(BookingScreenUiEffect.ShowMessage(message))
     }
 
     private fun GroupedRooms.toUiModel(): BookingRoomGroupUiModel =
         BookingRoomGroupUiModel(
             corpus = corpus,
             rooms = rooms
-                .map { room ->
-                    BookingRoomUiModel(
-                        id = room.id,
-                        name = room.roomName,
-                        corpus = room.corpus
-                    )
-                }
+                .map { BookingRoomUiModel(id = it.id, name = it.roomName, corpus = it.corpus) }
                 .sortedWith(compareBy<BookingRoomUiModel> { it.name.length }.thenBy { it.name })
                 .toImmutableList()
         )
@@ -448,8 +250,16 @@ class BookingViewModel @Inject constructor(
             id = id,
             intervalText = "$start - $end",
             description = description?.takeIf(String::isNotBlank) ?: "Без описания",
-            roomName = roomName
+            roomName = roomName,
+            authorTelegramId = author.telegramId,
+            isMine = isMine
         )
+    }
+
+    private fun LocalDate.toDayInterval(): DayInterval {
+        val start = LocalDateTime.of(this, LocalTime.MIN).toApiInstant()
+        val end = LocalDateTime.of(plusDays(1), LocalTime.MIN).toApiInstant()
+        return DayInterval(start = start, end = end)
     }
 
     private fun String.parseDateOrNull(): LocalDate? =
@@ -459,59 +269,22 @@ class BookingViewModel @Inject constructor(
             null
         }
 
-    private fun String.parseTimeOrNull(): LocalTime? =
-        try {
-            LocalTime.parse(this, TIME_FORMATTER)
-        } catch (_: DateTimeParseException) {
-            null
-        }
-
-    private fun String.coerceStartDate(): String {
-        val parsedDate = parseDateOrNull() ?: return this
-        val today = LocalDate.now()
-        return if (parsedDate.isBefore(today)) {
-            today.format(DATE_FORMATTER)
-        } else {
-            this
-        }
-    }
-
-    private fun BookingScreenUiState.withoutBookings(): BookingScreenUiState =
-        copy(
-            bookingsLoadState = BookingPostsLoadState.Idle,
-            bookings = emptyList<BookingUiModel>().toImmutableList()
-        )
-
     private fun Instant.toDisplayDateTime(): String =
-        toJavaInstant()
-            .atZone(UI_ZONE)
-            .toLocalDateTime()
-            .format(DISPLAY_FORMATTER)
+        toJavaInstant().atZone(UI_ZONE).toLocalDateTime().format(DISPLAY_FORMATTER)
 
     private fun LocalDateTime.toApiInstant(): Instant =
-        atZone(UI_ZONE)
-            .toInstant()
-            .toKotlinInstant()
+        atZone(UI_ZONE).toInstant().toKotlinInstant()
 
     private fun emitEffect(effect: BookingScreenUiEffect) {
-        viewModelScope.launch {
-            _uiEffect.emit(effect)
-        }
+        viewModelScope.launch { _uiEffect.emit(effect) }
     }
 
-    private data class NormalizedInterval(
-        val start: Instant,
-        val end: Instant,
-        val durationMinutes: Int
-    )
+    private data class DayInterval(val start: Instant, val end: Instant)
 
     private companion object {
         const val DATE_INPUT_LENGTH = 10
-        const val TIME_INPUT_LENGTH = 5
-        const val DEFAULT_DURATION_MINUTES = 60
         val UI_ZONE: ZoneId = ZoneId.systemDefault()
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
         val DISPLAY_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM HH:mm")
     }
 }

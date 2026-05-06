@@ -5,6 +5,7 @@ import dagger.Component
 import ru.ari.booking.di.modules.BookingBindsModule
 import ru.ari.booking.di.modules.BookingDataModule
 import ru.ari.booking.di.scope.BookingScreenScope
+import ru.ari.cache.di.CacheApi
 import ru.ari.network.di.NetworkApi
 
 @BookingScreenScope
@@ -14,7 +15,8 @@ import ru.ari.network.di.NetworkApi
         BookingDataModule::class
     ],
     dependencies = [
-        NetworkApi::class
+        NetworkApi::class,
+        CacheApi::class
     ]
 )
 interface BookingComponent {
@@ -22,6 +24,9 @@ interface BookingComponent {
 
     @Component.Factory
     interface Factory {
-        fun create(networkApi: NetworkApi): BookingComponent
+        fun create(
+            networkApi: NetworkApi,
+            cacheApi: CacheApi
+        ): BookingComponent
     }
 }

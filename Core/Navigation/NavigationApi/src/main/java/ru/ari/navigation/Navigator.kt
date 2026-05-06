@@ -6,6 +6,8 @@ interface Navigator {
 
     fun navigate(route: NavKey)
 
+    fun replaceStack(topLevelRoute: NavKey, vararg routes: NavKey)
+
     fun goBack()
 
 }

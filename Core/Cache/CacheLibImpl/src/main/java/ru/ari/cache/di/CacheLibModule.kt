@@ -7,9 +7,12 @@ import dagger.Module
 import dagger.Provides
 import ru.ari.cache.domain.datastore.DataStoreHelper
 import ru.ari.cache.data.datastore.SessionDataStoreHelperImpl
+import ru.ari.cache.data.room.BookingLocalDataSource
 import ru.ari.cache.data.room.PostLocalDataSource
+import ru.ari.cache.data.room.dao.BookingDao
 import ru.ari.cache.data.room.dao.PostDao
 import ru.ari.cache.data.room.database.PostDatabase
+import ru.ari.cache.domain.BookingDataSource
 import ru.ari.cache.domain.PostDataSource
 import javax.inject.Singleton
 
@@ -26,6 +29,12 @@ interface CacheLibModule {
         postLocalDataSource: PostLocalDataSource
     ): PostDataSource
 
+    @Binds
+    @Singleton
+    fun bindBookingDataSource(
+        bookingLocalDataSource: BookingLocalDataSource
+    ): BookingDataSource
+
     companion object {
         @Provides
         @Singleton
@@ -37,5 +46,9 @@ interface CacheLibModule {
         @Provides
         fun providePostDao(database: PostDatabase): PostDao =
             database.postDao()
+
+        @Provides
+        fun provideBookingDao(database: PostDatabase): BookingDao =
+            database.bookingDao()
     }
 }

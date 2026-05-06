@@ -95,6 +95,17 @@ fun ProfileScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+                Button(
+                    onClick = { onAction(ProfileScreenAction.ClickMyBookings) },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Мои брони",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
             OutlinedButton(

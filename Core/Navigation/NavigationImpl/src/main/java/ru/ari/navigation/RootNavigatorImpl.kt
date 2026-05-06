@@ -20,6 +20,17 @@ class RootNavigatorImpl(private val state: NavigationState): Navigator {
         }
     }
 
+    override fun replaceStack(topLevelRoute: NavKey, vararg routes: NavKey) {
+        require(routes.isEmpty()) { "Root navigator does not support nested stack routes" }
+        if (topLevelRoute in state.backStacks.keys) {
+            state.backStacks.forEach { (route, stack) ->
+                stack.clear()
+                stack.add(route)
+            }
+            state.topLevelRoute = topLevelRoute
+        }
+    }
+
     override fun goBack() {
         state.backStacks[state.topLevelRoute]?.removeLastOrNull()
     }

@@ -6,13 +6,18 @@ import javax.inject.Inject
 import javax.inject.Provider
 
 class BookingViewModelFactory @Inject constructor(
-    private val provider: Provider<BookingViewModel>
+    private val bookingProvider: Provider<BookingViewModel>,
+    private val bookingFormProvider: Provider<BookingFormViewModel>,
+    private val myBookingsProvider: Provider<MyBookingsViewModel>
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass != BookingViewModel::class.java) {
-            error("Unknown ViewModel class: $modelClass")
+        val viewModel = when (modelClass) {
+            BookingViewModel::class.java -> bookingProvider.get()
+            BookingFormViewModel::class.java -> bookingFormProvider.get()
+            MyBookingsViewModel::class.java -> myBookingsProvider.get()
+            else -> error("Unknown ViewModel class: $modelClass")
         }
         @Suppress("UNCHECKED_CAST")
-        return provider.get() as T
+        return viewModel as T
     }
 }

@@ -269,6 +269,7 @@ class ManagePostViewModel @Inject constructor(
     ) {
         val state = _uiState.value
         val form = state.form
+        val isCreate = state.mode is ManagePostMode.Create
 
         if (form.title.isBlank()) {
             emitError("Введите заголовок")
@@ -323,7 +324,7 @@ class ManagePostViewModel @Inject constructor(
                 when (result) {
                     is Result.Success -> {
                         _uiState.update { it.copy(isSaving = false) }
-                        emitEffect(ManagePostScreenUiEffect.Completed)
+                        emitEffect(ManagePostScreenUiEffect.Completed(isCreate = isCreate))
                     }
 
                     is Result.Error -> {

@@ -77,6 +77,10 @@ private fun ProfileScreenNavigationRoute(
                     postLoginNavigator.navigate(Route.PostLogin.ReservedPostsScreenRoute)
                 }
 
+                ProfileScreenUiEffect.OpenMyBookings -> {
+                    postLoginNavigator.navigate(Route.PostLogin.MyBookingsRoute)
+                }
+
                 is ProfileScreenUiEffect.ShowError -> {
                     appMessageHost.showMessage(effect.message)
                 }

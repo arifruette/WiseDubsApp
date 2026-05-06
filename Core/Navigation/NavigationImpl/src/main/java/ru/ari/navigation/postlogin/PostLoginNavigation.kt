@@ -42,13 +42,13 @@ private val POST_LOGIN_TOP_LEVEL_ROUTES = mapOf(
         iconRes = R.drawable.menu,
         label = "Шеринг"
     ),
-    Route.PostLogin.BookingScreenRoute to NavBarItem(
-        iconRes = R.drawable.posts_icon,
-        label = "Бронь"
-    ),
     Route.PostLogin.PostsScreenRoute to NavBarItem(
         iconRes = R.drawable.post,
         label = "Посты"
+    ),
+    Route.PostLogin.BookingScreenRoute to NavBarItem(
+        iconRes = R.drawable.posts_icon,
+        label = "Бронь"
     ),
     Route.PostLogin.ProfileScreenRoute to NavBarItem(
         iconRes = R.drawable.account,

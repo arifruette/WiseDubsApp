@@ -40,6 +40,7 @@ class ProfileViewModel @Inject constructor(
             ProfileScreenAction.Load -> Unit
             ProfileScreenAction.RetryProfile -> refreshProfile()
             ProfileScreenAction.ClickReservedPosts -> emitEffect(ProfileScreenUiEffect.OpenReservedPosts)
+            ProfileScreenAction.ClickMyBookings -> emitEffect(ProfileScreenUiEffect.OpenMyBookings)
             ProfileScreenAction.ClickLogout -> {
                 _uiState.update { it.copy(showLogoutDialog = true) }
             }
