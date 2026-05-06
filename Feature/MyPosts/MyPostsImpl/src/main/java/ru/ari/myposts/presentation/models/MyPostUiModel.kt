@@ -8,6 +8,8 @@ data class MyPostUiModel(
     val id: Long,
     val title: String,
     val exchangeText: String,
+    val locationText: String,
+    val createdAgoText: String,
     val isActive: Boolean,
     val previewImageUrl: String?,
     val archiveIcon: ImageVector,
