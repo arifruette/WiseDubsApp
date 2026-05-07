@@ -1,6 +1,7 @@
 package ru.ari.profile.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,14 +16,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -64,54 +69,33 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 22.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f, fill = false)
+                    .weight(1f)
                     .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(22.dp)
             ) {
-                val initials = uiState.profile?.avatarInitials().orEmpty()
-                InitialsAvatar(initials = initials.ifBlank { "?" })
-                ProfileSection(
+                ProfileCard(
                     isLoading = uiState.isProfileLoading,
                     profile = uiState.profile,
                     error = uiState.profileError,
                     onRetry = { onAction(ProfileScreenAction.RetryProfile) }
                 )
-                Button(
-                    onClick = { onAction(ProfileScreenAction.ClickReservedPosts) },
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Забронированные посты",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                Button(
-                    onClick = { onAction(ProfileScreenAction.ClickMyBookings) },
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Мои брони",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+
+                ProfileSections(
+                    onReservedPostsClick = { onAction(ProfileScreenAction.ClickReservedPosts) },
+                    onMyBookingsClick = { onAction(ProfileScreenAction.ClickMyBookings) }
+                )
             }
 
             OutlinedButton(
                 onClick = { onAction(ProfileScreenAction.ClickLogout) },
-                shape = RoundedCornerShape(10.dp),
-            modifier = Modifier
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp)
             ) {
@@ -134,7 +118,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileSection(
+private fun ProfileCard(
     isLoading: Boolean,
     profile: ProfileUiModel?,
     error: String?,
@@ -143,44 +127,148 @@ private fun ProfileSection(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         when {
             isLoading -> WiseDubsProgressIndicator(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(156.dp)
+                    .height(196.dp)
             )
+
             error != null -> ErrorBlock(
                 message = error,
                 onRetry = onRetry,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(18.dp)
             )
-            profile != null -> Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ProfileInfoRow(label = "Email", value = profile.email)
-                ProfileInfoRow(label = "Telegram", value = profile.telegramId)
-                if (profile.email.isBlank() && profile.telegramId.isBlank()) {
-                    Text(
-                        text = "Нет данных о профиле",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+
+            profile != null -> ProfileCardContent(
+                profile = profile,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+            )
+
             else -> ErrorBlock(
                 message = "Не удалось загрузить профиль",
                 onRetry = onRetry,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(18.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun ProfileCardContent(
+    profile: ProfileUiModel,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            InitialsAvatar(initials = profile.avatarInitials())
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 14.dp)
+            ) {
+                Text(
+                    text = profile.displayName(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    text = "Студент",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(top = 14.dp, bottom = 12.dp),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+        )
+
+        ProfileInfoRow(label = "Email", value = profile.email)
+    }
+}
+
+@Composable
+private fun ProfileSections(
+    onReservedPostsClick: () -> Unit,
+    onMyBookingsClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = "Мои разделы",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        )
+
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                ProfileSectionRow(
+                    text = "Забронированные посты",
+                    onClick = onReservedPostsClick
+                )
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                )
+
+                ProfileSectionRow(
+                    text = "Забронированные досуговые",
+                    onClick = onMyBookingsClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileSectionRow(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier
+                .weight(1f)
+        )
+
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 
@@ -222,17 +310,17 @@ private fun InitialsAvatar(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(80.dp)
+            .size(56.dp)
             .background(
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 shape = CircleShape
             )
     ) {
         Text(
             text = initials,
-            style = MaterialTheme.typography.titleLarge.copy(
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                fontWeight = FontWeight.SemiBold
             )
         )
     }
@@ -255,7 +343,7 @@ private fun ErrorBlock(
             color = MaterialTheme.colorScheme.error
         )
         Button(onClick = onRetry) {
-            androidx.compose.material3.Icon(
+            Icon(
                 imageVector = Icons.Default.Refresh,
                 contentDescription = null
             )
@@ -293,10 +381,12 @@ private fun LogoutDialog(
     )
 }
 
-private fun ProfileUiModel.avatarInitials(): String {
-    val source = telegramId.ifBlank { email }
-    return source
-        .trim()
+private fun ProfileUiModel.displayName(): String =
+    telegramId.trim()
+        .ifBlank { email.trim() }
+        .ifBlank { "Пользователь" }
+
+private fun ProfileUiModel.avatarInitials(): String =
+    displayName()
         .take(2)
         .uppercase()
-}
