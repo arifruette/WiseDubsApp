@@ -51,6 +51,8 @@ import ru.ari.designsystem.components.WiseDubsProgressIndicator
 import ru.ari.designsystem.components.WiseDubsStableTextField
 import ru.ari.designsystem.components.WiseDubsTopAppBar
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -230,7 +232,7 @@ private fun BookingFormContent(
 
         DateTimeSelectionRow(
             dateLabel = "Дата начала",
-            dateValue = uiState.selectedDate,
+            dateValue = uiState.selectedDate.toDisplayBookingDate(),
             timeLabel = "Время начала",
             timeValue = uiState.startTime,
             enabled = isFormEnabled,
@@ -256,7 +258,7 @@ private fun BookingFormContent(
         if (uiState.timeMode == BookingTimeMode.EndTime) {
             DateTimeSelectionRow(
                 dateLabel = "Дата конца",
-                dateValue = uiState.endDate,
+                dateValue = uiState.endDate.toDisplayBookingDate(),
                 timeLabel = "Время конца",
                 timeValue = uiState.endTime,
                 enabled = isFormEnabled,
@@ -510,6 +512,13 @@ private enum class BookingPicker {
     EndTime
 }
 
+private fun String.toDisplayBookingDate(): String =
+    try {
+        LocalDate.parse(this).format(DISPLAY_DATE_FORMATTER)
+    } catch (_: DateTimeParseException) {
+        this
+    }
+
 private fun Int.intersectionsWord(): String {
     val lastTwoDigits = this % 100
     if (lastTwoDigits in 11..14) return "пересечений"
@@ -528,3 +537,5 @@ private fun String.asTelegramHandle(): String =
             else -> "@$value"
         }
     }
+
+private val DISPLAY_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
