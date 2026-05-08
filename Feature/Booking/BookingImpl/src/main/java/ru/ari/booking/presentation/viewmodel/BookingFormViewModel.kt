@@ -92,16 +92,16 @@ class BookingFormViewModel @Inject constructor(
             is BookingFormAction.ChangeStartTime -> updateStartTime(action.value.take(TIME_INPUT_LENGTH))
                 .also { checkIntersections() }
             is BookingFormAction.ChangeEndDate -> _uiState.update {
-                it.copy(endDate = action.value.take(DATE_INPUT_LENGTH))
+                it.copy(endDate = action.value.take(DATE_INPUT_LENGTH)).withIntervalValidation()
             }.also { checkIntersections() }
             is BookingFormAction.ChangeEndTime -> _uiState.update {
-                it.copy(endTime = action.value.take(TIME_INPUT_LENGTH))
+                it.copy(endTime = action.value.take(TIME_INPUT_LENGTH)).withIntervalValidation()
             }.also { checkIntersections() }
             is BookingFormAction.ChangeDuration -> _uiState.update {
-                it.copy(durationMinutes = action.value.filter(Char::isDigit).take(4))
+                it.copy(durationMinutes = action.value.filter(Char::isDigit).take(4)).withIntervalValidation()
             }.also { checkIntersections() }
             is BookingFormAction.ChangeTimeMode -> _uiState.update {
-                it.copy(timeMode = action.mode).ensureValidEndDateTime()
+                it.copy(timeMode = action.mode).ensureValidEndDateTime().withIntervalValidation()
             }.also { checkIntersections() }
             is BookingFormAction.ChangeDescription -> _uiState.update {
                 it.copy(description = action.value.take(200))
@@ -196,13 +196,17 @@ class BookingFormViewModel @Inject constructor(
                 endTime = end.toLocalTime().format(TIME_FORMATTER),
                 durationMinutes = booking.duration.toString(),
                 description = booking.description.orEmpty()
-            )
+            ).withIntervalValidation()
         }
         checkIntersections()
     }
 
     private fun submit() {
         val state = _uiState.value
+        if (state.intervalError != null) {
+            emitEffect(BookingFormUiEffect.ShowMessage(state.intervalError))
+            return
+        }
         if (!state.canSubmit) return
         val room = state.selectedRoom
         if (room == null) {
@@ -212,6 +216,11 @@ class BookingFormViewModel @Inject constructor(
         val interval = state.toNormalizedInterval()
         if (interval == null) {
             emitEffect(BookingFormUiEffect.ShowMessage("Проверьте дату, время и длительность"))
+            return
+        }
+        if (interval.durationMinutes > MAX_DURATION_MINUTES) {
+            emitEffect(BookingFormUiEffect.ShowMessage(DURATION_LIMIT_ERROR))
+            _uiState.update { it.copy(intervalError = DURATION_LIMIT_ERROR) }
             return
         }
 
@@ -308,6 +317,10 @@ class BookingFormViewModel @Inject constructor(
     private fun checkIntersections() {
         val state = _uiState.value
         val room = state.selectedRoom
+        if (state.intervalError != null) {
+            clearIntersections()
+            return
+        }
         val interval = state.toNormalizedInterval()
         if (room == null || interval == null) {
             clearIntersections()
@@ -385,11 +398,11 @@ class BookingFormViewModel @Inject constructor(
     }
 
     private fun updateStartDate(value: String) {
-        _uiState.update { it.copy(selectedDate = value).ensureValidEndDateTime() }
+        _uiState.update { it.copy(selectedDate = value).ensureValidEndDateTime().withIntervalValidation() }
     }
 
     private fun updateStartTime(value: String) {
-        _uiState.update { it.copy(startTime = value).ensureValidEndDateTime() }
+        _uiState.update { it.copy(startTime = value).ensureValidEndDateTime().withIntervalValidation() }
     }
 
     private fun BookingFormUiState.ensureValidEndDateTime(): BookingFormUiState {
@@ -408,7 +421,23 @@ class BookingFormViewModel @Inject constructor(
         )
     }
 
+    private fun BookingFormUiState.withIntervalValidation(): BookingFormUiState {
+        val validation = validateInterval()
+        val error = when {
+            validation == IntervalValidation.EndNotAfterStart -> END_BEFORE_START_ERROR
+            validation is IntervalValidation.Valid && validation.interval.durationMinutes > MAX_DURATION_MINUTES -> {
+                DURATION_LIMIT_ERROR
+            }
+            else -> null
+        }
+        return copy(intervalError = error)
+    }
+
     private fun BookingFormUiState.toNormalizedInterval(): NormalizedInterval? {
+        return (validateInterval() as? IntervalValidation.Valid)?.interval
+    }
+
+    private fun BookingFormUiState.validateInterval(): IntervalValidation? {
         val startDate = selectedDate.parseDateOrNull() ?: return null
         val start = LocalDateTime.of(startDate, startTime.parseTimeOrNull() ?: return null)
         val end = when (timeMode) {
@@ -421,12 +450,12 @@ class BookingFormViewModel @Inject constructor(
                 start.plusMinutes(minutes.toLong())
             }
         }
-        if (!end.isAfter(start)) return null
+        if (!end.isAfter(start)) return IntervalValidation.EndNotAfterStart
         val apiStart = start.toApiInstant()
         val apiEnd = end.toApiInstant()
         val duration = Duration.between(apiStart.toJavaInstant(), apiEnd.toJavaInstant()).toMinutes()
         if (duration <= 0 || duration > Int.MAX_VALUE) return null
-        return NormalizedInterval(apiStart, apiEnd, duration.toInt())
+        return IntervalValidation.Valid(NormalizedInterval(apiStart, apiEnd, duration.toInt()))
     }
 
     private fun GroupedRooms.toUiModel(): BookingRoomGroupUiModel =
@@ -511,11 +540,19 @@ class BookingFormViewModel @Inject constructor(
         val postId: Long?
     )
 
+    private sealed interface IntervalValidation {
+        data class Valid(val interval: NormalizedInterval) : IntervalValidation
+        data object EndNotAfterStart : IntervalValidation
+    }
+
     private companion object {
         const val DATE_INPUT_LENGTH = 10
         const val TIME_INPUT_LENGTH = 5
         const val DEFAULT_DURATION_MINUTES = 60
+        const val MAX_DURATION_MINUTES = 180
         const val INTERSECTIONS_CHECK_DELAY_MS = 350L
+        const val END_BEFORE_START_ERROR = "Конец брони должен быть позже начала"
+        const val DURATION_LIMIT_ERROR = "Бронь не может длиться дольше 3 часов"
         val UI_ZONE: ZoneId = ZoneId.systemDefault()
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

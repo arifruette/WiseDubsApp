@@ -274,6 +274,13 @@ private fun BookingFormContent(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+        uiState.intervalError?.let { error ->
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         if (uiState.isIntersectionsLoading) {
             BookingIntersectionsLoadingSection(modifier = Modifier.fillMaxWidth())

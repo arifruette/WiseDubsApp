@@ -25,6 +25,7 @@ data class BookingFormUiState(
     val endDate: String = "",
     val endTime: String = "",
     val durationMinutes: String = "60",
+    val intervalError: String? = null,
     val description: String = "",
     val timeMode: BookingTimeMode = BookingTimeMode.EndTime,
     val isSubmitting: Boolean = false,
@@ -35,5 +36,10 @@ data class BookingFormUiState(
     val activeRoomSheet: BookingRoomSheetStep = BookingRoomSheetStep.None
 ) {
     val isEditMode: Boolean get() = postId != null
-    val canSubmit: Boolean get() = !isSubmitting && !isDeleting && !isIntersectionsLoading && intersections.isEmpty()
+    val canSubmit: Boolean
+        get() = !isSubmitting &&
+            !isDeleting &&
+            !isIntersectionsLoading &&
+            intersections.isEmpty() &&
+            intervalError == null
 }
