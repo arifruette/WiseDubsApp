@@ -1,0 +1,623 @@
+package ru.ari.managepost.presentation.ui
+
+import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
+import coil.compose.AsyncImage
+import java.io.File
+import kotlinx.collections.immutable.ImmutableList
+import ru.ari.designsystem.components.WiseDubsTopAppBar
+import ru.ari.designsystem.components.WiseDubsTextField
+import ru.ari.managepost.presentation.contract.ManagePostActionHandler
+import ru.ari.managepost.presentation.contract.ManagePostScreenAction
+import ru.ari.managepost.presentation.contract.ManagePostScreenUiState
+import ru.ari.managepost.presentation.models.ManagePostImageUiModel
+import ru.ari.managepost.presentation.models.ManagePostMode
+import ru.ari.managepost.presentation.models.ManagePostRoomsLoadState
+import ru.ari.managepost.presentation.models.ManagePostSelectorSheet
+import ru.ari.posts.api.domain.models.PickupLocation
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ManagePostScreen(
+    uiState: ManagePostScreenUiState,
+    actionHandler: ManagePostActionHandler,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (uiState.isLoading) {
+        LoadingScreen(modifier = modifier)
+        return
+    }
+
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.toString()?.let { actionHandler.onAction(ManagePostScreenAction.AddImage(it)) }
+    }
+    val isFormEnabled = !uiState.isSaving
+
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            WiseDubsTopAppBar(
+                title = when (uiState.mode) {
+                    ManagePostMode.Create -> "Добавить объявление"
+                    is ManagePostMode.Edit -> "Редактирование"
+                },
+                onBackClick = onBackClick
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(bottom = 24.dp)
+        ) {
+            ImageSection(
+                images = uiState.form.images,
+                enabled = isFormEnabled,
+                onAddClick = {
+                    imagePicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                onRemoveClick = { key ->
+                    actionHandler.onAction(ManagePostScreenAction.RemoveImage(key))
+                }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                WiseDubsTextField(
+                    value = uiState.form.title,
+                    onValueChanged = { actionHandler.onAction(ManagePostScreenAction.ChangeTitle(it)) },
+                    labelText = "Заголовок",
+                    enabled = isFormEnabled,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                WiseDubsTextField(
+                    value = uiState.form.description,
+                    onValueChanged = {
+                        actionHandler.onAction(ManagePostScreenAction.ChangeDescription(it))
+                    },
+                    labelText = "Описание",
+                    enabled = isFormEnabled,
+                    maxLines = 4,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                )
+
+                WiseDubsTextField(
+                    value = uiState.form.exchange,
+                    onValueChanged = { actionHandler.onAction(ManagePostScreenAction.ChangeExchange(it)) },
+                    labelText = "Обмен",
+                    enabled = isFormEnabled,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                AddressSelectorSection(
+                    uiState = uiState,
+                    enabled = isFormEnabled,
+                    onAddressClick = {
+                        actionHandler.onAction(ManagePostScreenAction.OpenAddressSelector)
+                    },
+                    onRetryClick = {
+                        actionHandler.onAction(ManagePostScreenAction.RetryLoadLocations)
+                    }
+                )
+
+                if (uiState.mode is ManagePostMode.Edit && uiState.form.reservedBy.isNotBlank()) {
+                    WiseDubsTextField(
+                        value = uiState.form.reservedBy,
+                        onValueChanged = {},
+                        labelText = "Зарезервировано",
+                        enabled = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    val localFilesByKey = uiState.form.images
+                        .filterIsInstance<ManagePostImageUiModel.Local>()
+                        .mapNotNull { image ->
+                            image.previewUrl.toFileOrNull(context)?.let { file -> image.key to file }
+                        }
+                        .toMap()
+
+                    actionHandler.onAction(
+                        ManagePostScreenAction.Submit(
+                            images = uiState.form.images.toList(),
+                            localFilesByKey = localFilesByKey
+                        )
+                    )
+                },
+                enabled = !uiState.isSaving,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp)
+            ) {
+                if (uiState.isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = when (uiState.mode) {
+                            ManagePostMode.Create -> "Создать пост"
+                            is ManagePostMode.Edit -> "Сохранить изменения"
+                        },
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+        }
+
+        when (uiState.activeSelectorSheet) {
+            ManagePostSelectorSheet.None -> Unit
+            ManagePostSelectorSheet.Address -> {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        actionHandler.onAction(ManagePostScreenAction.DismissSelector)
+                    }
+                ) {
+                    AddressSheetContent(
+                        locations = uiState.pickupLocations,
+                        selectedId = uiState.form.selectedAddress?.id,
+                        onSelect = {
+                            actionHandler.onAction(ManagePostScreenAction.SelectAddress(it))
+                        },
+                        onEdit = {
+                            actionHandler.onAction(ManagePostScreenAction.EditAddress(it))
+                        },
+                        onCreate = {
+                            actionHandler.onAction(ManagePostScreenAction.CreateAddress)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingScreen(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun AddressSelectorSection(
+    uiState: ManagePostScreenUiState,
+    enabled: Boolean,
+    onAddressClick: () -> Unit,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Где забрать",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        when (val locationsState = uiState.locationsLoadState) {
+            ManagePostRoomsLoadState.Loading -> {
+                SelectorStatusCard(
+                    title = "Загружаем адреса",
+                    subtitle = "Список нужен для выбора места.",
+                    action = {
+                        CircularProgressIndicator(
+                            modifier = Modifier.height(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                )
+            }
+
+            is ManagePostRoomsLoadState.Error -> {
+                SelectorStatusCard(
+                    title = "Не удалось загрузить список",
+                    subtitle = locationsState.message,
+                    action = {
+                        TextButton(onClick = onRetryClick) {
+                            Icon(
+                                imageVector = Icons.Outlined.Refresh,
+                                contentDescription = null
+                            )
+                            Text("Повторить")
+                        }
+                    }
+                )
+            }
+
+            ManagePostRoomsLoadState.Content -> {
+                SelectionField(
+                    value = uiState.form.selectedAddress?.displayTitle().orEmpty(),
+                    placeholder = "Выбрать адрес",
+                    enabled = enabled,
+                    onClick = onAddressClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectionField(
+    value: String,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    supportingText: String? = null,
+    onClick: () -> Unit
+) {
+    val borderColor = if (enabled) {
+        MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
+    } else {
+        MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
+    }
+    val backgroundColor = if (enabled) {
+        MaterialTheme.colorScheme.surface
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(enabled = enabled, onClick = onClick)
+            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(20.dp)),
+        color = backgroundColor
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = value.ifBlank { placeholder },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (value.isBlank()) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    fontWeight = if (value.isBlank()) FontWeight.Normal else FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                supportingText?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
+                contentDescription = null,
+                tint = if (enabled) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.outline
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SelectorStatusCard(
+    title: String,
+    subtitle: String,
+    action: @Composable () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            action()
+        }
+    }
+}
+
+@Composable
+private fun AddressSheetContent(
+    locations: ImmutableList<PickupLocation>,
+    selectedId: Int?,
+    onSelect: (PickupLocation) -> Unit,
+    onEdit: (Int) -> Unit,
+    onCreate: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        Text(
+            text = "Выберите адрес",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(locations, key = { it.id }) { location ->
+                AddressListItem(
+                    location = location,
+                    selected = location.id == selectedId,
+                    onSelect = { onSelect(location) },
+                    onEdit = { onEdit(location.id) }
+                )
+            }
+        }
+
+        Button(
+            onClick = onCreate,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Добавить новый адрес",
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddressListItem(
+    location: PickupLocation,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    onEdit: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val background = if (selected) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    }
+    val secondaryText = location.displaySecondaryText()
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(onClick = onSelect),
+        color = background
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = location.displayTitle(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                )
+                if (secondaryText.isNotBlank()) {
+                    Text(
+                        text = secondaryText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            IconButton(onClick = onEdit) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Редактировать"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImageSection(
+    images: ImmutableList<ManagePostImageUiModel>,
+    enabled: Boolean,
+    onAddClick: () -> Unit,
+    onRemoveClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 30.dp)
+    ) {
+        items(items = images, key = ManagePostImageUiModel::key) { image ->
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                AsyncImage(
+                    model = image.previewUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .height(140.dp)
+                        .aspectRatio(1f)
+                )
+                IconButton(
+                    onClick = { onRemoveClick(image.key) },
+                    enabled = enabled,
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Удалить"
+                    )
+                }
+            }
+        }
+
+        item {
+            Column(
+                modifier = Modifier
+                    .height(140.dp)
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .clickable(enabled = enabled, onClick = onAddClick),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Добавить фото",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+private fun String.toFileOrNull(context: Context): File? {
+    val uri = runCatching { toUri() }.getOrNull() ?: return null
+    val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+    val tempFile = File.createTempFile("manage_post_local_", ".jpg", context.cacheDir)
+
+    inputStream.use { input ->
+        tempFile.outputStream().use { output ->
+            input.copyTo(output)
+        }
+    }
+
+    return tempFile
+}

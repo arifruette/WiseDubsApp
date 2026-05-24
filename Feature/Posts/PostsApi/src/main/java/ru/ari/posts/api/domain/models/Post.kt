@@ -1,0 +1,18 @@
+package ru.ari.posts.api.domain.models
+
+data class Post(
+    val id: Long,
+    val title: String,
+    val description: String,
+    val exchange: String,
+    val pickupLocation: PickupLocation,
+    val messageId: String,
+    val isActive: Boolean,
+    val isReserved: Boolean,
+    val createdAt: String,
+    val reservedBy: String,
+    val reservedById: Long? = null,
+    val authorEmail: String?,
+    val authorTelegramId: String? = null,
+    val images: List<PostImage>
+)

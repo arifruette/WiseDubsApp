@@ -2,7 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlinKapt)
 }
+
+val baseApiUrl = (findProperty("baseApiUrl") ?: System.getenv("BASE_API_URL") ?: "NO_FOUND")
 
 android {
     namespace = "ru.ari.wisedubsapp"
@@ -18,30 +21,57 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BASE_API_URL", "\"$baseApiUrl\"")
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            isShrinkResources = false
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
             )
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
+
+    implementation(projects.navigationImpl)
+    implementation(projects.diCoreLib)
+    implementation(projects.cacheLibImpl)
+    implementation(projects.networkLibImpl)
+    implementation(projects.postsImpl)
+    implementation(projects.managePostImpl)
+    implementation(projects.myPostsImpl)
+    implementation(projects.profileImpl)
+    implementation(projects.bookingImpl)
+    implementation(projects.sharingPostDetailsApi)
+    implementation(projects.sharingPostDetailsImpl)
+    implementation(projects.composeCoreLib)
+    implementation(projects.login)
+    implementation(projects.registration)
+    implementation(projects.sharingImpl)
+    implementation(projects.designSystemCoreLib)
+    implementation(projects.authCommonLibImpl)
+
+    implementation(libs.dagger)
+    kapt(libs.daggerCompiler)
+
+    implementation(libs.kotlinx.collections.immutable)
+
+    implementation(libs.androidx.core.splash)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

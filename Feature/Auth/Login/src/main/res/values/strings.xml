@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hse_logo">Логотип ВШЭ</string>
+    <string name="auth_title">Авторизация</string>
+    <string name="email_placeholder">Почта</string>
+    <string name="password_placeholder">Введите пароль</string>
+    <string name="enter_button_text">Войти</string>
+    <string name="to_registration_screen_button_text">Регистрация</string>
+</resources>
