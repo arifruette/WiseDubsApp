@@ -10,7 +10,8 @@ sealed interface ManagePostImageUiModel {
     @Immutable
     data class Remote(
         override val key: String,
-        override val previewUrl: String
+        override val previewUrl: String,
+        val id: Long
     ) : ManagePostImageUiModel
 
     @Immutable

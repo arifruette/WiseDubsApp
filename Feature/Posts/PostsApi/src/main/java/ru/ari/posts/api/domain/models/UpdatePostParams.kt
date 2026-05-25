@@ -10,5 +10,7 @@ data class UpdatePostParams(
     val pickupLocationId: Int?,
     val messageId: String,
     val reservedBy: String,
-    val imageFiles: List<File>?
+    val imageFiles: List<File>?,
+    val retainedImageIds: List<Long>? = null,
+    val clearImages: Boolean? = null
 )

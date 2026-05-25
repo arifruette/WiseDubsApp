@@ -3,7 +3,6 @@ package ru.ari.managepost.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import java.io.File
-import java.net.URL
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -218,7 +217,8 @@ class ManagePostViewModel @Inject constructor(
                             images = post.images.map { image ->
                                 ManagePostImageUiModel.Remote(
                                     key = "remote-${image.id}",
-                                    previewUrl = image.url
+                                    previewUrl = image.url,
+                                    id = image.id
                                 )
                             }.toImmutableList()
                         )
@@ -287,7 +287,7 @@ class ManagePostViewModel @Inject constructor(
             try {
                 val result = when (val mode = state.mode) {
                     ManagePostMode.Create -> {
-                        preparedFiles = prepareUploadFiles(images, localFilesByKey)
+                        preparedFiles = prepareLocalUploadFiles(images, localFilesByKey)
                         postsInteractor.createPost(
                             CreatePostParams(
                                 title = form.title.trim(),
@@ -301,24 +301,36 @@ class ManagePostViewModel @Inject constructor(
                         )
                     }
 
-                    is ManagePostMode.Edit -> postsInteractor.updatePost(
-                        UpdatePostParams(
-                            postId = mode.postId,
-                            title = form.title.trim(),
-                            description = form.description.trim().ifBlank { null },
-                            exchange = form.exchange.trim().ifBlank { null },
-                            pickupLocationId = form.selectedAddress.id,
-                            messageId = form.messageId,
-                            reservedBy = form.reservedBy,
-                            imageFiles = if (form.imagesChanged) {
-                                prepareUploadFiles(images, localFilesByKey).also {
-                                    preparedFiles = it
+                    is ManagePostMode.Edit -> {
+                        val retainedRemoteImageIds = images
+                            .filterIsInstance<ManagePostImageUiModel.Remote>()
+                            .map(ManagePostImageUiModel.Remote::id)
+
+                        postsInteractor.updatePost(
+                            UpdatePostParams(
+                                postId = mode.postId,
+                                title = form.title.trim(),
+                                description = form.description.trim().ifBlank { null },
+                                exchange = form.exchange.trim().ifBlank { null },
+                                pickupLocationId = form.selectedAddress.id,
+                                messageId = form.messageId,
+                                reservedBy = form.reservedBy,
+                                imageFiles = if (form.imagesChanged) {
+                                    prepareLocalUploadFiles(images, localFilesByKey).also {
+                                        preparedFiles = it
+                                    }
+                                } else {
+                                    null
+                                },
+                                retainedImageIds = retainedRemoteImageIds.takeIf {
+                                    form.imagesChanged && it.isNotEmpty()
+                                },
+                                clearImages = true.takeIf {
+                                    form.imagesChanged && retainedRemoteImageIds.isEmpty()
                                 }
-                            } else {
-                                null
-                            }
+                            )
                         )
-                    )
+                    }
                 }
 
                 when (result) {
@@ -346,29 +358,14 @@ class ManagePostViewModel @Inject constructor(
         }
     }
 
-    private fun prepareUploadFiles(
+    private fun prepareLocalUploadFiles(
         images: List<ManagePostImageUiModel>,
         localFilesByKey: Map<String, File>
-    ): List<File> = images.mapIndexed { index, image ->
-        when (image) {
-            is ManagePostImageUiModel.Local -> {
-                localFilesByKey[image.key]
-                    ?: error("Не удалось подготовить локальное изображение")
-            }
-
-            is ManagePostImageUiModel.Remote -> downloadRemoteImage(url = image.previewUrl, index = index)
+    ): List<File> = images
+        .filterIsInstance<ManagePostImageUiModel.Local>()
+        .map { image ->
+            localFilesByKey[image.key] ?: error("Не удалось подготовить локальное изображение")
         }
-    }
-
-    private fun downloadRemoteImage(url: String, index: Int): File {
-        val tempFile = File.createTempFile("manage_post_remote_$index", ".jpg")
-        URL(url).openStream().use { input ->
-            tempFile.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
-        return tempFile
-    }
 
     private fun updateForm(transform: ManagePostFormUiModel.() -> ManagePostFormUiModel) {
         _uiState.update { state -> state.copy(form = state.form.transform()) }

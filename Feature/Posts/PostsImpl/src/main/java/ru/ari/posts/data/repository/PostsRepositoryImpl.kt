@@ -113,6 +113,8 @@ class PostsRepositoryImpl @Inject constructor(
                 pickupLocationId = params.pickupLocationId?.toString()?.toPart(),
                 exchange = params.exchange.toNullablePart(),
                 messageId = params.messageId.toPart(),
+                retainedImageIds = params.retainedImageIds?.map { it.toString().toPart() },
+                clearImages = params.clearImages?.toPart(),
                 images = params.imageFiles?.toImageParts().orEmpty()
             ).toDomain(baseUrl)
 

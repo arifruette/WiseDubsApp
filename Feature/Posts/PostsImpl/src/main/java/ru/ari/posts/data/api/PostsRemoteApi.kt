@@ -2,6 +2,7 @@ package ru.ari.posts.data.api
 
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import kotlin.jvm.JvmSuppressWildcards
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -46,7 +47,7 @@ interface PostsRemoteApi {
         @Part("pickup_location_id") pickupLocationId: RequestBody,
         @Part("exchange") exchange: RequestBody?,
         @Part("message_id") messageId: RequestBody,
-        @Part images: List<MultipartBody.Part>
+        @Part images: List<@JvmSuppressWildcards MultipartBody.Part>
     ): PostResponse
 
     @Multipart
@@ -65,6 +66,8 @@ interface PostsRemoteApi {
         @Part("pickup_location_id") pickupLocationId: RequestBody?,
         @Part("exchange") exchange: RequestBody?,
         @Part("message_id") messageId: RequestBody?,
-        @Part images: List<MultipartBody.Part>
+        @Part("retained_image_ids") retainedImageIds: List<@JvmSuppressWildcards RequestBody>?,
+        @Part("clear_images") clearImages: RequestBody?,
+        @Part images: List<@JvmSuppressWildcards MultipartBody.Part>
     ): PostResponse
 }
