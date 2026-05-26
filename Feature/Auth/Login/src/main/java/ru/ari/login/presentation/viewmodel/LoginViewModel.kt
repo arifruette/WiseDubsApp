@@ -47,17 +47,27 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun loginUser() {
+        val email = uiState.value.emailText.trim()
+        val password = uiState.value.passwordText
+        val validationError = validateCredentials(email, password)
+        if (validationError != null) {
+            viewModelScope.launch {
+                _uiEffect.emit(LoginScreenUiEffect.ShowError(validationError))
+            }
+            return
+        }
+
         _uiState.update {
             _uiState.value.copy(isLoading = true)
         }
         viewModelScope.launch {
             val result =
-                authInteractor.login(uiState.value.emailText, uiState.value.passwordText)
+                authInteractor.login(email, password)
             result.onSuccess {
                 _uiEffect.emit(LoginScreenUiEffect.NavigateToMainScreen)
                 _uiState.update { it.copy(isLoading = false) }
-            }.onError { code, message ->
-                _uiEffect.emit(LoginScreenUiEffect.ShowError(message.toLoginErrorMessage(code)))
+            }.onError { _, message ->
+                _uiEffect.emit(LoginScreenUiEffect.ShowError(message))
                 _uiState.update { it.copy(isLoading = false) }
             }.onException {
                 _uiEffect.emit(LoginScreenUiEffect.ShowError(it.toUserErrorMessage()))
@@ -78,11 +88,17 @@ class LoginViewModel @Inject constructor(
         it.copy(isPasswordTextVisible = !it.isPasswordTextVisible)
     }
 
-    private fun String.toLoginErrorMessage(code: Int): String =
-        if (code == UNAUTHORIZED_CODE) INVALID_CREDENTIALS_ERROR else this
+    private fun validateCredentials(email: String, password: String): String? =
+        when {
+            !EMAIL_REGEX.matches(email) -> EMAIL_FORMAT_ERROR
+            password.length < MIN_PASSWORD_LENGTH -> INVALID_CREDENTIALS_ERROR
+            else -> null
+        }
 
     private companion object {
-        const val UNAUTHORIZED_CODE = 401
+        val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
+        const val MIN_PASSWORD_LENGTH = 5
+        const val EMAIL_FORMAT_ERROR = "Неверный формат почты"
         const val INVALID_CREDENTIALS_ERROR = "Неверный логин или пароль"
     }
 }

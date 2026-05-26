@@ -6,7 +6,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +24,7 @@ import ru.ari.composelib.LocalPostLoginNavigator
 import ru.ari.navigation.BaseNavigatorImpl
 import ru.ari.navigation.R
 import ru.ari.navigation.Route
+import ru.ari.navigation.components.DismissibleSnackbarHost
 import ru.ari.navigation.di.RouteEntryProvider
 import ru.ari.navigation.postlogin.model.NavBarItem
 import ru.ari.navigation.rememberNavigationState
@@ -85,7 +85,7 @@ fun PostLoginNavigation(
         Scaffold(
             modifier = modifier,
             contentWindowInsets = WindowInsets(0.dp),
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHost = { DismissibleSnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
                 NavigationBar {
                     POST_LOGIN_TOP_LEVEL_ROUTES.forEach { (key, value) ->

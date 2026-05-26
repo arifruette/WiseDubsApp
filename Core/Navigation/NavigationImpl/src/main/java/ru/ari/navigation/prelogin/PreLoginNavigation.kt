@@ -3,7 +3,6 @@ package ru.ari.navigation.prelogin
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -18,6 +17,7 @@ import kotlinx.collections.immutable.persistentListOf
 import ru.ari.composelib.LocalPreLoginNavigator
 import ru.ari.navigation.BaseNavigatorImpl
 import ru.ari.navigation.Route
+import ru.ari.navigation.components.DismissibleSnackbarHost
 import ru.ari.navigation.di.RouteEntryProvider
 import ru.ari.navigation.rememberNavigationState
 import ru.ari.navigation.toEntries
@@ -26,6 +26,8 @@ val PRE_LOGIN_ROUTES = persistentListOf(
     Route.PreLogin.LoginScreenRoute,
     Route.PreLogin.RegistrationScreenRoute
 )
+
+private val PRE_LOGIN_SNACKBAR_BOTTOM_PADDING = 88.dp
 
 @Composable
 fun PreLoginNavigation(
@@ -53,7 +55,12 @@ fun PreLoginNavigation(
         Scaffold(
             modifier = modifier,
             contentWindowInsets = WindowInsets(0.dp),
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            snackbarHost = {
+                DismissibleSnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.padding(bottom = PRE_LOGIN_SNACKBAR_BOTTOM_PADDING)
+                )
+            }
         ) { innerPadding ->
             NavDisplay(
                 entries = preLoginNavigationState.toEntries(entryProvider),

@@ -24,7 +24,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(user: UserLogin): Result<Token> = try {
         Result.Success(api.loginUser(user.toRequest()).toDomainTokenModel())
     } catch (e: HttpException) {
-        Result.Error(e.code(), e.message())
+        Result.Error(e.code(), e.loginErrorMessage())
     } catch (e: Throwable) {
         Result.Exception(e)
     }
@@ -43,5 +43,13 @@ class AuthRepositoryImpl @Inject constructor(
         Result.Error(e.code(), e.message())
     } catch (e: Throwable) {
         Result.Exception(e)
+    }
+
+    private fun HttpException.loginErrorMessage(): String =
+        if (code() == UNAUTHORIZED_CODE) INVALID_CREDENTIALS_ERROR else message()
+
+    private companion object {
+        const val UNAUTHORIZED_CODE = 401
+        const val INVALID_CREDENTIALS_ERROR = "Неверный логин или пароль"
     }
 }
