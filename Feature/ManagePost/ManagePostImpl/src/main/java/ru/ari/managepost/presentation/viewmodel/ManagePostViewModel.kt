@@ -23,6 +23,7 @@ import ru.ari.managepost.presentation.models.ManagePostMode
 import ru.ari.managepost.presentation.models.ManagePostRoomsLoadState
 import ru.ari.managepost.presentation.models.ManagePostSelectorSheet
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.posts.api.domain.interactor.PostsInteractor
 import ru.ari.posts.api.domain.models.CreatePostParams
 import ru.ari.posts.api.domain.models.PickupLocation
@@ -188,7 +189,7 @@ class ManagePostViewModel @Inject constructor(
                 is Result.Error -> handleLocationsLoadingError(locationsResult.message)
                 is Result.Exception -> {
                     handleLocationsLoadingError(
-                        locationsResult.error.message ?: "Не удалось загрузить список адресов"
+                        locationsResult.error.toUserErrorMessage("Не удалось загрузить список адресов")
                     )
                 }
             }
@@ -227,7 +228,7 @@ class ManagePostViewModel @Inject constructor(
             }
 
             is Result.Error -> emitError(postResult.message)
-            is Result.Exception -> emitError(postResult.error.message ?: "Не удалось загрузить пост")
+            is Result.Exception -> emitError(postResult.error.toUserErrorMessage("Не удалось загрузить пост"))
         }
     }
 
@@ -346,12 +347,12 @@ class ManagePostViewModel @Inject constructor(
 
                     is Result.Exception -> {
                         _uiState.update { it.copy(isSaving = false) }
-                        emitError(result.error.message ?: "Не удалось сохранить пост")
+                        emitError(result.error.toUserErrorMessage("Не удалось сохранить пост"))
                     }
                 }
             } catch (error: Throwable) {
                 _uiState.update { it.copy(isSaving = false) }
-                emitError(error.message ?: "Не удалось подготовить изображения")
+                emitError(error.toUserErrorMessage("Не удалось подготовить изображения"))
             } finally {
                 preparedFiles.distinct().forEach(File::delete)
             }

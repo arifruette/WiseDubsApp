@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ari.cache.domain.datastore.DataStoreHelper
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.sharing.api.domain.interactor.SharingInteractor
 import ru.ari.sharing.domain.mapper.SharingPostUiMapper
 import ru.ari.sharing.presentation.contract.SharingScreenAction
@@ -110,7 +111,7 @@ class SharingViewModel @Inject constructor(
                 }
 
                 is Result.Exception -> {
-                    handleLoadError(mode, result.error.message ?: "Непредвиденная ошибка")
+                    handleLoadError(mode, result.error.toUserErrorMessage())
                 }
             }
         }

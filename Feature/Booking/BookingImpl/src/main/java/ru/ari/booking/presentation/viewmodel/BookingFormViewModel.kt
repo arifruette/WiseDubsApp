@@ -36,6 +36,7 @@ import ru.ari.booking.presentation.models.BookingRoomsLoadState
 import ru.ari.booking.presentation.models.BookingTimeMode
 import ru.ari.booking.presentation.models.BookingUiModel
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
@@ -160,7 +161,7 @@ class BookingFormViewModel @Inject constructor(
                     it.copy(roomsLoadState = BookingRoomsLoadState.Error(result.message), loadError = result.message)
                 }
                 is Result.Exception -> _uiState.update {
-                    val message = result.error.message ?: "Не удалось загрузить комнаты"
+                    val message = result.error.toUserErrorMessage("Не удалось загрузить комнаты")
                     it.copy(roomsLoadState = BookingRoomsLoadState.Error(message), loadError = message)
                 }
             }
@@ -174,7 +175,7 @@ class BookingFormViewModel @Inject constructor(
                 is Result.Success -> applyBooking(result.data)
                 is Result.Error -> _uiState.update { it.copy(isBookingLoading = false, loadError = result.message) }
                 is Result.Exception -> _uiState.update {
-                    it.copy(isBookingLoading = false, loadError = result.error.message ?: "Не удалось загрузить бронь")
+                    it.copy(isBookingLoading = false, loadError = result.error.toUserErrorMessage("Не удалось загрузить бронь"))
                 }
             }
         }
@@ -265,7 +266,7 @@ class BookingFormViewModel @Inject constructor(
                 }
                 is Result.Exception -> {
                     _uiState.update { it.copy(isSubmitting = false) }
-                    emitEffect(BookingFormUiEffect.ShowMessage(result.error.message ?: "Не удалось сохранить бронь"))
+                    emitEffect(BookingFormUiEffect.ShowMessage(result.error.toUserErrorMessage("Не удалось сохранить бронь")))
                 }
             }
         }
@@ -308,7 +309,7 @@ class BookingFormViewModel @Inject constructor(
                             showDeleteConfirmDialog = true
                         )
                     }
-                    emitEffect(BookingFormUiEffect.ShowMessage(result.error.message ?: "Не удалось удалить бронь"))
+                    emitEffect(BookingFormUiEffect.ShowMessage(result.error.toUserErrorMessage("Не удалось удалить бронь")))
                 }
             }
         }
@@ -367,7 +368,7 @@ class BookingFormViewModel @Inject constructor(
                     showIntersectionsError(result.message)
                 }
                 is Result.Exception -> showIntersectionsError(
-                    message = result.error.message ?: "Не удалось проверить пересечения",
+                    message = result.error.toUserErrorMessage("Не удалось проверить пересечения"),
                     request = request
                 )
             }

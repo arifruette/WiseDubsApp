@@ -16,6 +16,7 @@ import ru.ari.auth.common.api.domain.models.params.UserRegisterParams
 import ru.ari.network.domain.models.onError
 import ru.ari.network.domain.models.onException
 import ru.ari.network.domain.models.onSuccess
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.registration.domain.usecase.ValidateUserCredentialsUseCase
 import ru.ari.registration.presentation.contract.RegistrationScreenAction
 import ru.ari.registration.presentation.models.PasswordField
@@ -73,6 +74,7 @@ class RegistrationViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false) }
                 }.onException {
                     Log.e("ERROR", "registerUser: ${it.message}")
+                    _uiEffect.emit(RegistrationScreenUiEffect.ShowError(it.toUserErrorMessage()))
                     _uiState.update { it.copy(isLoading = false) }
                 }
             }

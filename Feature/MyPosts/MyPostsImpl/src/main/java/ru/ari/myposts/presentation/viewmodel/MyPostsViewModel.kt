@@ -21,6 +21,7 @@ import ru.ari.myposts.presentation.contract.MyPostsScreenUiState
 import ru.ari.myposts.presentation.contract.MyPostsTab
 import ru.ari.myposts.presentation.models.MyPostUiModel
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.posts.api.domain.interactor.PostsInteractor
 import javax.inject.Inject
 
@@ -126,7 +127,7 @@ class MyPostsViewModel @Inject constructor(
                         publishFailure(
                             selectedTab = selectedTab,
                             isRefreshing = showRefreshIndicator,
-                            message = result.error.message ?: "Непредвиденная ошибка"
+                            message = result.error.toUserErrorMessage()
                         )
                     }
                 }
@@ -169,7 +170,7 @@ class MyPostsViewModel @Inject constructor(
                     publishState(selectedTab = selectedTab, isRefreshing = currentRefreshState())
                     emitEffect(
                         MyPostsScreenUiEffect.ShowError(
-                            result.error.message ?: "Непредвиденная ошибка"
+                            result.error.toUserErrorMessage()
                         )
                     )
                 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import ru.ari.cache.domain.datastore.DataStoreHelper
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.posts.api.domain.interactor.PostsInteractor
 import ru.ari.posts.api.domain.models.Post
 import ru.ari.sharingpostdetails.presentation.contract.SharingPostDetailsUiAction
@@ -83,7 +84,7 @@ class SharingPostDetailsViewModel @Inject constructor(
                 is Result.Exception -> {
                     emitEffect(
                         SharingPostDetailsUiEffect.CloseWithError(
-                            result.error.message ?: "Не удалось загрузить детали поста"
+                            result.error.toUserErrorMessage("Не удалось загрузить детали поста")
                         )
                     )
                 }
@@ -145,7 +146,7 @@ class SharingPostDetailsViewModel @Inject constructor(
                     updateContent { copy(isPrimaryActionInProgress = false) }
                     emitEffect(
                         SharingPostDetailsUiEffect.ShowMessage(
-                            result.error.message ?: "Не удалось обновить бронь"
+                            result.error.toUserErrorMessage("Не удалось обновить бронь")
                         )
                     )
                 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import ru.ari.auth.common.api.domain.interactor.AuthInteractor
 import ru.ari.auth.common.api.domain.models.UserProfile
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.profile.presentation.contract.ProfileScreenAction
 import ru.ari.profile.presentation.contract.ProfileScreenUiEffect
 import ru.ari.profile.presentation.contract.ProfileScreenUiState
@@ -95,7 +96,7 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
                 is Result.Error -> showProfileError(result.message)
-                is Result.Exception -> showProfileError(result.error.message ?: "Не удалось загрузить профиль")
+                is Result.Exception -> showProfileError(result.error.toUserErrorMessage("Не удалось загрузить профиль"))
             }
         }
     }

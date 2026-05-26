@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.posts.api.domain.interactor.PostsInteractor
 import ru.ari.posts.api.domain.models.PickupLocation
 import ru.ari.posts.api.domain.models.Post
@@ -60,7 +61,7 @@ class ReservedPostsViewModel @Inject constructor(
                     }
                 }
                 is Result.Error -> showError(result.message)
-                is Result.Exception -> showError(result.error.message ?: "Не удалось загрузить забронированные посты")
+                is Result.Exception -> showError(result.error.toUserErrorMessage("Не удалось загрузить забронированные посты"))
             }
         }
     }

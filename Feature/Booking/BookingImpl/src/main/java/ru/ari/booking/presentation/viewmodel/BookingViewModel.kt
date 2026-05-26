@@ -34,6 +34,7 @@ import ru.ari.booking.presentation.models.BookingRoomUiModel
 import ru.ari.booking.presentation.models.BookingRoomsLoadState
 import ru.ari.booking.presentation.models.BookingUiModel
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
@@ -160,7 +161,7 @@ class BookingViewModel @Inject constructor(
                 }
                 is Result.Exception -> _uiState.update {
                     it.copy(
-                        roomsLoadState = BookingRoomsLoadState.Error(result.error.message ?: "Не удалось загрузить комнаты"),
+                        roomsLoadState = BookingRoomsLoadState.Error(result.error.toUserErrorMessage("Не удалось загрузить комнаты")),
                         isRoomsRefreshing = false
                     )
                 }
@@ -216,7 +217,7 @@ class BookingViewModel @Inject constructor(
                 is Result.Success -> _uiState.update { it.copy(isBookingsRefreshing = false) }
                 is Result.Error -> showBookingsError(result.message, userInitiated)
                 is Result.Exception -> showBookingsError(
-                    result.error.message ?: "Не удалось загрузить занятость",
+                    result.error.toUserErrorMessage("Не удалось загрузить занятость"),
                     userInitiated
                 )
             }

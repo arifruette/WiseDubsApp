@@ -17,6 +17,7 @@ import ru.ari.managepost.presentation.address.contract.AddressManageActionHandle
 import ru.ari.managepost.presentation.address.contract.AddressManageEffect
 import ru.ari.managepost.presentation.address.contract.AddressManageState
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import ru.ari.posts.api.domain.models.CreatePickupLocationParams
 import ru.ari.posts.api.domain.models.UpdatePickupLocationParams
 
@@ -93,7 +94,7 @@ class AddressManageViewModel @Inject constructor(
                 }
 
                 is Result.Error -> emitError(result.message)
-                is Result.Exception -> emitError(result.error.message ?: "Ошибка загрузки")
+                is Result.Exception -> emitError(result.error.toUserErrorMessage("Ошибка загрузки"))
             }
         }
     }
@@ -139,7 +140,7 @@ class AddressManageViewModel @Inject constructor(
                 }
 
                 is Result.Error -> emitError(result.message)
-                is Result.Exception -> emitError(result.error.message ?: "Ошибка сохранения")
+                is Result.Exception -> emitError(result.error.toUserErrorMessage("Ошибка сохранения"))
             }
         }
     }
@@ -155,7 +156,7 @@ class AddressManageViewModel @Inject constructor(
                 }
 
                 is Result.Error -> emitError(result.message)
-                is Result.Exception -> emitError(result.error.message ?: "Ошибка удаления")
+                is Result.Exception -> emitError(result.error.toUserErrorMessage("Ошибка удаления"))
             }
         }
     }

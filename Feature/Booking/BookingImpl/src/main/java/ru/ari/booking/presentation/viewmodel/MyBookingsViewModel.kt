@@ -25,6 +25,7 @@ import ru.ari.booking.presentation.contract.MyBookingsUiState
 import ru.ari.booking.presentation.models.BookingPostsLoadState
 import ru.ari.booking.presentation.models.BookingUiModel
 import ru.ari.network.domain.models.Result
+import ru.ari.network.domain.models.toUserErrorMessage
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
@@ -122,7 +123,7 @@ class MyBookingsViewModel @Inject constructor(
                     }
                     is Result.Exception -> {
                         if (isSelectedPeriod(requestedPeriod)) {
-                            showLoadError(result.error.message ?: "Не удалось загрузить брони", userInitiated)
+                            showLoadError(result.error.toUserErrorMessage("Не удалось загрузить брони"), userInitiated)
                         }
                     }
                 }
